@@ -1911,7 +1911,7 @@ if test x"${PHPBIN}" = xno; then
 else
 
     if test "x$PHPBIN" = xyes; then
-      AC_CHECK_PROGS(PHP, [php5 php])
+      AC_CHECK_PROGS(PHP, [php7.0 php5 php])
     else
       PHP=$PHPBIN
     fi
@@ -1921,12 +1921,14 @@ else
     case $PHP in
       *5)
 	PHPCONFIG=`echo "$PHP"|sed 's/5$/-config5/'` ;;
+      *7.0)
+	PHPCONFIG=`echo "$PHP"|sed 's/7\.0$/-config7.0/'` ;;
       *)
 	PHPCONFIG=$PHP-config ;;
     esac
     php_version=`$PHPCONFIG --version 2>/dev/null`
     case $php_version in
-    5*)
+    5*|7.*)
 	PHPINC=`$PHPCONFIG --includes 2>/dev/null`
 	if test -n "$PHPINC"; then
 	  AC_MSG_RESULT($PHPINC)
@@ -1937,7 +1939,7 @@ else
     "")
         AC_MSG_RESULT([could not find $PHPCONFIG or obtain PHP version from it]) ;;
     *)
-	AC_MSG_RESULT([found PHP $php_version, but only PHP 5 is supported]) ;;
+	AC_MSG_RESULT([found PHP $php_version, but only PHP 5 and 7 are supported]) ;;
     esac
 fi
 AC_SUBST(PHP)
