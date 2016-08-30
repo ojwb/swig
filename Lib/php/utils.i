@@ -95,7 +95,6 @@ t_output_helper(zval **target, zval *o TSRMLS_DC) {
   }
   if ( (*target)->type == IS_NULL ) {
     REPLACE_ZVAL_VALUE(target,o,1);
-    FREE_ZVAL(o);
     return;
   }
   ALLOC_INIT_ZVAL(tmp);

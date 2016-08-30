@@ -2646,7 +2646,7 @@ done:
       /* wrap complex arguments to zvals */
       Printv(w->code, wrap_args, NIL);
 
-      Append(w->code, "call_user_function(EG(function_table), (zval**)&swig_self, &funcname,");
+      Append(w->code, "call_user_function(EG(function_table), swig_self, &funcname,");
       Printf(w->code, " &%s, %d, args TSRMLS_CC);\n", Swig_cresult_name(), idx);
 
       if (tm) {
@@ -2698,8 +2698,6 @@ done:
 	  p = nextSibling(p);
 	}
       }
-
-      Printf(w->code, "FREE_ZVAL(%s);\n", Swig_cresult_name());
 
       Delete(parse_args);
       Delete(cleanup);

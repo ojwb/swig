@@ -89,18 +89,19 @@ namespace Swig {
         TSRMLS_SET_CTX(swig_zts_ctx);
       }
 
-      static bool swig_is_overridden_method(char *cname, char *lc_fname TSRMLS_DC) {
-        zend_class_entry **ce;
-        zend_function *mptr;
-
-        if (zend_lookup_class(cname, strlen(cname), &ce TSRMLS_CC) != SUCCESS) {
-          return false;
+      static bool swig_is_overridden_method(const char *cname, const char *lc_fname TSRMLS_DC) {
+        bool result = false;
+        zend_string * cname_str = zend_string_init(cname, strlen(cname), 0);
+        zend_class_entry *ce = zend_lookup_class(cname_str TSRMLS_CC);
+        if (ce) {
+          zval * mptr = zend_hash_str_find(&ce->function_table, lc_fname, strlen(lc_fname));
+          if (mptr) {
+            // common.scope points to the declaring class FIXME: is just the first test enough here?
+            result = Z_FUNC_P(mptr)->common.scope == ce || zend_string_equals(Z_FUNC_P(mptr)->common.scope->name, cname_str);
+          }
         }
-        if (zend_hash_find(&(*ce)->function_table, lc_fname, strlen(lc_fname) + 1, (void **) &mptr) != SUCCESS) {
-          return false;
-        }
-        // common.scope points to the declaring class
-        return strcmp(mptr->common.scope->name, cname);
+        zend_string_release(cname_str);
+        return result;
       }
 
       template <typename Type>
