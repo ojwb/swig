@@ -152,14 +152,14 @@ static void SwigPHP_emit_resource_registrations() {
         human_name = Getattr(class_node, "name");
       // Do we have a known destructor for this type?
       if (destructor) {
-        Printf(s_wrappers, "  %s(rsrc, SWIGTYPE%s->name TSRMLS_CC);\n", destructor, key);
+        Printf(s_wrappers, "  %s(res, SWIGTYPE%s->name TSRMLS_CC);\n", destructor, key);
       } else {
         Printf(s_wrappers, "  /* No destructor for class %s */\n", human_name);
-        Printf(s_wrappers, "  efree(rsrc->ptr);\n");
+        Printf(s_wrappers, "  efree(res->ptr);\n");
       }
     } else {
       Printf(s_wrappers, "  /* No destructor for simple type %s */\n", key);
-      Printf(s_wrappers, "  efree(rsrc->ptr);\n");
+      Printf(s_wrappers, "  efree(res->ptr);\n");
     }
 
     // close function
@@ -2325,9 +2325,9 @@ done:
     Wrapper *f = NewWrapper();
     Printf(f->def, "/* This function is designed to be called by the zend list destructors */\n");
     Printf(f->def, "/* to typecast and do the actual destruction */\n");
-    Printf(f->def, "static void %s(zend_resource *rsrc, const char *type_name TSRMLS_DC) {\n", destructorname);
+    Printf(f->def, "static void %s(zend_resource *res, const char *type_name TSRMLS_DC) {\n", destructorname);
 
-    Wrapper_add_localv(f, "value", "swig_object_wrapper *value=(swig_object_wrapper *) rsrc->ptr", NIL);
+    Wrapper_add_localv(f, "value", "swig_object_wrapper *value=(swig_object_wrapper *) res->ptr", NIL);
     Wrapper_add_localv(f, "ptr", "void *ptr=value->ptr", NIL);
     Wrapper_add_localv(f, "newobject", "int newobject=value->newobject", NIL);
 
