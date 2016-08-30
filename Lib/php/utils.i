@@ -1,18 +1,16 @@
 
 %define CONVERT_BOOL_IN(lvar,t,invar)
-  convert_to_boolean_ex(invar);
-  lvar = (t) Z_LVAL_PP(invar);
+  lvar = (t) zval_is_true(&invar);
 %enddef
 
 %define CONVERT_INT_IN(lvar,t,invar)
-  convert_to_long_ex(invar);
-  lvar = (t) Z_LVAL_PP(invar);
+  lvar = (t) zval_get_long(&invar);
 %enddef
 
 %define CONVERT_LONG_LONG_IN(lvar,t,invar)
-  switch ((*(invar))->type) {
+  switch (Z_TYPE(&invar)) {
       case IS_DOUBLE:
-          lvar = (t) (*(invar))->value.dval;
+          lvar = (t) Z_DVAL(&invar);
           break;
       case IS_STRING: {
           char * endptr;
@@ -22,13 +20,12 @@
           /* FALL THRU */
       }
       default:
-          convert_to_long_ex(invar);
-          lvar = (t) (*(invar))->value.lval;
+          lvar = (t) zval_get_long(&invar);
   }
 %enddef
 
 %define CONVERT_UNSIGNED_LONG_LONG_IN(lvar,t,invar)
-  switch ((*(invar))->type) {
+  switch (Z_TYPE(&invar)) {
       case IS_DOUBLE:
           lvar = (t) (*(invar))->value.dval;
           break;
@@ -40,18 +37,16 @@
           /* FALL THRU */
       }
       default:
-          convert_to_long_ex(invar);
-          lvar = (t) (*(invar))->value.lval;
+          lvar = (t) zval_get_long(&invar);
   }
 %enddef
 
 %define CONVERT_INT_OUT(lvar,invar)
-  lvar = (t) Z_LVAL_PP(invar);
+  lvar = (t) zval_get_long(&invar);
 %enddef
 
 %define CONVERT_FLOAT_IN(lvar,t,invar)
-  convert_to_double_ex(invar);
-  lvar = (t) Z_DVAL_PP(invar);
+  lvar = (t) zval_get_double(&invar);
 %enddef
 
 %define CONVERT_CHAR_IN(lvar,t,invar)

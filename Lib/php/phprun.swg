@@ -28,10 +28,6 @@ extern "C" {
 # define ZEND_FE_END { NULL, NULL, NULL }
 #endif
 
-#ifndef Z_SET_ISREF_P
-/* For PHP < 5.3 */
-# define Z_SET_ISREF_P(z) (z)->is_ref = 1
-#endif
 #ifndef Z_SET_REFCOUNT_P
 /* For PHP < 5.3 */
 # define Z_SET_REFCOUNT_P(z, rc) (z)->refcount = (rc)
@@ -114,15 +110,15 @@ SWIG_ZTS_SetPointerZval(zval *z, void *ptr, swig_type_info *type, int newobject 
     value->newobject=(newobject & 1);
     if ((newobject & 2) == 0) {
       /* Just register the pointer as a resource. */
-      ZEND_REGISTER_RESOURCE(z, value, *(int *)(type->clientdata));
+      ZVAL_RES(z, zend_register_resource(value, *(int *)(type->clientdata)));
     } else {
       /*
        * Wrap the resource in an object, the resource will be accessible
        * via the "_cPtr" member. This is currently only used by
        * directorin typemaps.
        */
-      zval *resource;
-      zend_class_entry **ce = NULL;
+      zval resource;
+      zend_class_entry *ce = NULL;
       const char *type_name = type->name+3; /* +3 so: _p_Foo -> Foo */
       size_t type_name_len;
       int result;
@@ -135,26 +131,27 @@ SWIG_ZTS_SetPointerZval(zval *z, void *ptr, swig_type_info *type, int newobject 
       }
       type_name_len = strlen(type_name);
 
-      MAKE_STD_ZVAL(resource);
-      ZEND_REGISTER_RESOURCE(resource, value, *(int *)(type->clientdata));
+      ZVAL_RES(&resource, zend_register_resource(value, *(int *)(type->clientdata)));
       if (SWIG_PREFIX_LEN > 0) {
-        char * classname = (char*)emalloc(SWIG_PREFIX_LEN + type_name_len + 1);
-        strcpy(classname, SWIG_PREFIX);
-        strcpy(classname + SWIG_PREFIX_LEN, type_name);
-        result = zend_lookup_class(classname, SWIG_PREFIX_LEN + type_name_len, &ce TSRMLS_CC);
-        efree(classname);
+        zend_string * classname = zend_string_alloc(SWIG_PREFIX_LEN + type_name_len, 0);
+        memcpy(classname->val, SWIG_PREFIX, SWIG_PREFIX_LEN);
+        memcpy(classname->val + SWIG_PREFIX_LEN, type_name, type_name_len);
+        ce = zend_lookup_class(classname);
+	zend_string_release(classname);
       } else {
-        result = zend_lookup_class((char *)type_name, type_name_len, &ce TSRMLS_CC);
+        zend_string * classname = zend_string_init(type_name, type_name_len, 0);
+        ce = zend_lookup_class(classname);
+	zend_string_release(classname);
       }
-      if (result != SUCCESS) {
+      if (ce == NULL) {
         /* class does not exist */
         object_init(z);
       } else {
-        object_init_ex(z, *ce);
+        object_init_ex(z, ce);
       }
-      Z_SET_REFCOUNT_P(z, 1);
-      Z_SET_ISREF_P(z);
-      zend_hash_update(HASH_OF(z), (char*)"_cPtr", sizeof("_cPtr"), (void*)&resource, sizeof(zval*), NULL);
+      ZVAL_MAKE_REF(z);
+
+      zend_hash_str_update(HASH_OF(z), "_cPtr", sizeof("_cPtr") - 1, &resource);
     }
     return;
   }
@@ -206,17 +203,16 @@ static void *
 SWIG_ZTS_ConvertResourcePtr(zval *z, swig_type_info *ty, int flags TSRMLS_DC) {
   swig_object_wrapper *value;
   void *p;
-  int type;
   const char *type_name;
 
-  value = (swig_object_wrapper *) zend_list_find(z->value.lval, &type);
-  if (type==-1) return NULL;
+  if (Z_RES_TYPE_P(z) == -1) return NULL;
+  value = (swig_object_wrapper *) Z_RES_VAL_P(z);
   if (flags & SWIG_POINTER_DISOWN) {
     value->newobject = 0;
   }
   p = value->ptr;
 
-  type_name=zend_rsrc_list_get_rsrc_type(z->value.lval TSRMLS_CC);
+  type_name=zend_rsrc_list_get_rsrc_type(Z_RES_P(z));
 
   return SWIG_ZTS_ConvertResourceData(p, type_name, ty TSRMLS_CC);
 }
@@ -230,12 +226,12 @@ SWIG_ZTS_ConvertPtr(zval *z, void **ptr, swig_type_info *ty, int flags TSRMLS_DC
     return 0;
   }
 
-  switch (z->type) {
+  switch (Z_TYPE_P(z)) {
     case IS_OBJECT: {
-      zval ** _cPtr;
-      if (zend_hash_find(HASH_OF(z),(char*)"_cPtr",sizeof("_cPtr"),(void**)&_cPtr)==SUCCESS) {
-	if ((*_cPtr)->type==IS_RESOURCE) {
-	  *ptr = SWIG_ZTS_ConvertResourcePtr(*_cPtr, ty, flags TSRMLS_CC);
+      zval * _cPtr = zend_hash_str_find(HASH_OF(z), "_cPtr", sizeof("_cPtr") - 1);
+      if (_cPtr) {
+	if (Z_TYPE_P(_cPtr) == IS_RESOURCE) {
+	  *ptr = SWIG_ZTS_ConvertResourcePtr(_cPtr, ty, flags TSRMLS_CC);
 	  return (*ptr == NULL ? -1 : 0);
 	}
       }
@@ -254,19 +250,13 @@ SWIG_ZTS_ConvertPtr(zval *z, void **ptr, swig_type_info *ty, int flags TSRMLS_DC
 
 static char const_name[] = "swig_runtime_data_type_pointer";
 static swig_module_info *SWIG_Php_GetModule() {
-  zval *pointer;
-  swig_module_info *ret = 0;
-  TSRMLS_FETCH();
-
-  MAKE_STD_ZVAL(pointer);
-
-  if (zend_get_constant(const_name, sizeof(const_name) - 1, pointer TSRMLS_CC)) {
-    if (pointer->type == IS_LONG) {
-      ret = (swig_module_info *) pointer->value.lval;
+  zval *pointer = zend_get_constant_str(const_name, sizeof(const_name) - 1);
+  if (pointer) {
+    if (Z_TYPE_P(pointer) == IS_LONG) {
+      return (swig_module_info *) pointer->value.lval;
     }
   } 
-  FREE_ZVAL(pointer);
-  return ret; 
+  return NULL;
 }
 
 static void SWIG_Php_SetModule(swig_module_info *pointer) {

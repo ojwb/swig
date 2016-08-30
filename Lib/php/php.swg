@@ -85,7 +85,7 @@
 /* Object passed by value. Convert to a pointer */
 %typemap(in) SWIGTYPE ($&1_ltype tmp)
 {
-	if(SWIG_ConvertPtr(*$input, (void **) &tmp, $&1_descriptor, 0) < 0 || tmp == NULL) {
+	if (SWIG_ConvertPtr($input, (void **) &tmp, $&1_descriptor, 0) < 0 || tmp == NULL) {
           SWIG_PHP_Error(E_ERROR, "Type error in argument $argnum of $symname. Expected $&1_descriptor");
 	}
 	$1 = *tmp;
@@ -104,28 +104,28 @@
 %typemap(in) SWIGTYPE *,
 	     SWIGTYPE []
 {
-	if(SWIG_ConvertPtr(*$input, (void **) &$1, $1_descriptor, 0) < 0) {
+	if (SWIG_ConvertPtr($input, (void **) &$1, $1_descriptor, 0) < 0) {
             SWIG_PHP_Error(E_ERROR, "Type error in argument $argnum of $symname. Expected $1_descriptor");
 	}
 }
 
 %typemap(in) SWIGTYPE &
 {
-	if(SWIG_ConvertPtr(*$input, (void **) &$1, $1_descriptor, 0) < 0 || $1 == NULL) {
+	if (SWIG_ConvertPtr($input, (void **) &$1, $1_descriptor, 0) < 0 || $1 == NULL) {
 	    SWIG_PHP_Error(E_ERROR, "Type error in argument $argnum of $symname. Expected $1_descriptor");
 	}
 }
 
 %typemap(in) SWIGTYPE &&
 {
-	if(SWIG_ConvertPtr(*$input, (void **) &$1, $1_descriptor, 0) < 0 || $1 == NULL) {
+	if (SWIG_ConvertPtr($input, (void **) &$1, $1_descriptor, 0) < 0 || $1 == NULL) {
 	    SWIG_PHP_Error(E_ERROR, "Type error in argument $argnum of $symname. Expected $1_descriptor");
 	}
 }
 
 %typemap(in) SWIGTYPE *const& ($*ltype temp)
 {
-	if(SWIG_ConvertPtr(*$input, (void **) &temp, $*1_descriptor, 0) < 0) {
+	if (SWIG_ConvertPtr($input, (void **) &temp, $*1_descriptor, 0) < 0) {
             SWIG_PHP_Error(E_ERROR, "Type error in argument $argnum of $symname. Expected $*1_descriptor");
 	}
 	$1 = ($1_ltype)&temp;
@@ -133,7 +133,7 @@
 
 %typemap(in) SWIGTYPE *DISOWN
 {
-  if(SWIG_ConvertPtr(*$input, (void **) &$1, $1_descriptor, SWIG_POINTER_DISOWN ) < 0) {
+  if (SWIG_ConvertPtr($input, (void **) &$1, $1_descriptor, SWIG_POINTER_DISOWN ) < 0) {
     SWIG_PHP_Error(E_ERROR, "Type error in argument $argnum of $symname. Expected $&1_descriptor");
   }
 }
@@ -145,7 +145,7 @@
 
 %typemap(in) void *
 {
-	if(SWIG_ConvertPtr(*$input, (void **) &$1, 0, 0) < 0) {
+	if (SWIG_ConvertPtr($input, (void **) &$1, 0, 0) < 0) {
 	  /* Allow NULL from php for void* */
 	  if ((*$input)->type==IS_NULL) $1=0;
 	  else
@@ -160,7 +160,7 @@
 {
   /* If they pass NULL by reference, make it into a void*
      This bit should go in arginit if arginit support init-ing scripting args */
-  if(SWIG_ConvertPtr(*$input, (void **) &$1, $1_descriptor, 0) < 0) {
+  if (SWIG_ConvertPtr($input, (void **) &$1, $1_descriptor, 0) < 0) {
     /* So... we didn't get a ref or ptr, but we'll accept NULL by reference */
     if (!((*$input)->type==IS_NULL && PZVAL_IS_REF(*$input))) {
       /* wasn't a pre/ref/thing, OR anything like an int thing */
@@ -393,9 +393,9 @@
 {
   void * p = emalloc(sizeof($1));
   memcpy(p, &$1, sizeof($1));
-  zval * resource;
-  MAKE_STD_ZVAL(resource);
-  ZEND_REGISTER_RESOURCE(resource, p, swig_member_ptr);
+  zval resource;
+  ZVAL_RES(&resource, zend_register_resource(p, swig_member_ptr));
+  // FIXME: resource is never used now?!
 
   SWIG_SetPointerZval(return_value, (void *)&$1, $1_descriptor, $owner);
 }
@@ -472,7 +472,7 @@
 %typecheck(SWIG_TYPECHECK_POINTER) SWIGTYPE
 {
   void *tmp;
-  _v = (SWIG_ConvertPtr(*$input, (void **)&tmp, $&1_descriptor, 0) >= 0);
+  _v = (SWIG_ConvertPtr($input, (void **)&tmp, $&1_descriptor, 0) >= 0);
 }
 
 %typecheck(SWIG_TYPECHECK_POINTER)
@@ -483,19 +483,19 @@
              SWIGTYPE *const&
 {
   void *tmp;
-  _v = (SWIG_ConvertPtr(*$input, (void**)&tmp, $1_descriptor, 0) >= 0);
+  _v = (SWIG_ConvertPtr($input, (void**)&tmp, $1_descriptor, 0) >= 0);
 }
 
 %typecheck(SWIG_TYPECHECK_POINTER) SWIGTYPE *const&
 {
   void *tmp;
-  _v = (SWIG_ConvertPtr(*$input, (void**)&tmp, $*1_descriptor, 0) >= 0);
+  _v = (SWIG_ConvertPtr($input, (void**)&tmp, $*1_descriptor, 0) >= 0);
 }
 
 %typecheck(SWIG_TYPECHECK_VOIDPTR) void *
 {
   void *tmp;
-  _v = (SWIG_ConvertPtr(*$input, (void**)&tmp, 0, 0) >= 0);
+  _v = (SWIG_ConvertPtr($input, (void**)&tmp, 0, 0) >= 0);
 }
 
 /* Exception handling */

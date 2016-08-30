@@ -33,11 +33,10 @@
                    SWIGTYPE &,
                    SWIGTYPE &&,
                    SWIGTYPE [] {
-  zval *z_var;
+  zval z_var;
   zend_constant c;
   size_t len = sizeof("$symname") - 1;
-  MAKE_STD_ZVAL(z_var);
-  SWIG_SetPointerZval(z_var, (void*)$value, $1_descriptor, 0);
+  SWIG_SetPointerZval(&z_var, (void*)$value, $1_descriptor, 0);
   c.value = *z_var;
   zval_copy_ctor(&c.value);
   c.name = zend_strndup("$symname", len);

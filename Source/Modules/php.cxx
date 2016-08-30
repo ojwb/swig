@@ -267,7 +267,7 @@ public:
     }
 
     /* Set comparison with null for ConstructorToFunction */
-    setSubclassInstanceCheck(NewString("$arg->type != IS_NULL"));
+    setSubclassInstanceCheck(NewString("Z_TYPE_P($arg) != IS_NULL"));
 
     /* Initialize all of the output files */
     String *outfile = Getattr(n, "outfile");
@@ -427,31 +427,29 @@ public:
 
     Append(s_header, "\n");
     Printf(s_header, "ZEND_NAMED_FUNCTION(_wrap_swig_%s_alter_newobject) {\n", module);
-    Append(s_header, "  zval **args[2];\n");
+    Append(s_header, "  zval args[2];\n");
     Append(s_header, "  swig_object_wrapper *value;\n");
-    Append(s_header, "  int type;\n");
     Append(s_header, "\n");
     Append(s_header, "  SWIG_ResetError(TSRMLS_C);\n");
     Append(s_header, "  if(ZEND_NUM_ARGS() != 2 || zend_get_parameters_array_ex(2, args) != SUCCESS) {\n");
     Append(s_header, "    WRONG_PARAM_COUNT;\n");
     Append(s_header, "  }\n");
     Append(s_header, "\n");
-    Append(s_header, "  value = (swig_object_wrapper *) zend_list_find((*args[0])->value.lval, &type);\n");
-    Append(s_header, "  value->newobject = zval_is_true(*args[1]);\n");
+    Append(s_header, "  value = (swig_object_wrapper *) Z_RES_VAL(args[0]);\n");
+    Append(s_header, "  value->newobject = zval_is_true(&args[1]);\n");
     Append(s_header, "\n");
     Append(s_header, "  return;\n");
     Append(s_header, "}\n");
     Printf(s_header, "ZEND_NAMED_FUNCTION(_wrap_swig_%s_get_newobject) {\n", module);
-    Append(s_header, "  zval **args[1];\n");
+    Append(s_header, "  zval args[1];\n");
     Append(s_header, "  swig_object_wrapper *value;\n");
-    Append(s_header, "  int type;\n");
     Append(s_header, "\n");
     Append(s_header, "  SWIG_ResetError(TSRMLS_C);\n");
     Append(s_header, "  if(ZEND_NUM_ARGS() != 1 || zend_get_parameters_array_ex(1, args) != SUCCESS) {\n");
     Append(s_header, "    WRONG_PARAM_COUNT;\n");
     Append(s_header, "  }\n");
     Append(s_header, "\n");
-    Append(s_header, "  value = (swig_object_wrapper *) zend_list_find((*args[0])->value.lval, &type);\n");
+    Append(s_header, "  value = (swig_object_wrapper *) Z_RES_VAL(args[0]);\n");
     Append(s_header, "  RETVAL_LONG(value->newobject);\n");
     Append(s_header, "\n");
     Append(s_header, "  return;\n");
@@ -819,8 +817,8 @@ public:
     if (num_arguments > 0) {
       String *args = NewStringEmpty();
       if (wrapperType == directorconstructor)
-        Wrapper_add_local(f, "arg0", "zval *arg0");
-      Printf(args, "zval **args[%d]", num_arguments);
+        Wrapper_add_local(f, "arg0", "zval * arg0");
+      Printf(args, "zval args[%d]", num_arguments);
       Wrapper_add_local(f, "args", args);
       Delete(args);
       args = NULL;
@@ -851,7 +849,7 @@ public:
       Printf(f->code, "WRONG_PARAM_COUNT;\n}\n\n");
     }
     if (wrapperType == directorconstructor)
-      Printf(f->code, "arg0 = *args[0];\n  \n");
+      Printf(f->code, "arg0 = &args[0];\n  \n");
 
     /* Now convert from PHP to C variables */
     // At this point, argcount if used is the number of deliberately passed args
@@ -891,7 +889,7 @@ public:
       }
 
       if ((tm = Getattr(p, "tmap:in"))) {
-	Replaceall(tm, "$source", source);
+	Replaceall(tm, "$source", &source);
 	Replaceall(tm, "$target", ln);
 	Replaceall(tm, "$input", source);
 	Setattr(p, "emit:input", source);
@@ -2289,8 +2287,8 @@ done:
       Delete(director_ctor_code);
       director_ctor_code = NewStringEmpty();
       director_prot_ctor_code = NewStringEmpty();
-      Printf(director_ctor_code, "if ( arg0->type == IS_NULL ) { /* not subclassed */\n");
-      Printf(director_prot_ctor_code, "if ( arg0->type == IS_NULL ) { /* not subclassed */\n");
+      Printf(director_ctor_code, "if (Z_TYPE_P(arg0) == IS_NULL) { /* not subclassed */\n");
+      Printf(director_prot_ctor_code, "if (Z_TYPE_P(arg0) == IS_NULL) { /* not subclassed */\n");
       Printf(director_ctor_code, "  %s = (%s *)new %s(%s);\n", Swig_cresult_name(), ctype, ctype, args);
       Printf(director_prot_ctor_code, "  SWIG_PHP_Error(E_ERROR, \"accessing abstract class or protected constructor\");\n", name, name, args);
       if (i) {
@@ -2327,7 +2325,7 @@ done:
     Wrapper *f = NewWrapper();
     Printf(f->def, "/* This function is designed to be called by the zend list destructors */\n");
     Printf(f->def, "/* to typecast and do the actual destruction */\n");
-    Printf(f->def, "static void %s(zend_rsrc_list_entry *rsrc, const char *type_name TSRMLS_DC) {\n", destructorname);
+    Printf(f->def, "static void %s(zend_resource *rsrc, const char *type_name TSRMLS_DC) {\n", destructorname);
 
     Wrapper_add_localv(f, "value", "swig_object_wrapper *value=(swig_object_wrapper *) rsrc->ptr", NIL);
     Wrapper_add_localv(f, "ptr", "void *ptr=value->ptr", NIL);
@@ -2566,7 +2564,6 @@ done:
       Swig_typemap_attach_parms("directorargout", l, w);
 
       Parm *p;
-      char source[256];
 
       int outputs = 0;
       if (!is_void)
@@ -2590,16 +2587,11 @@ done:
 	if ((tm = Getattr(p, "tmap:directorin")) != 0) {
 	  String *parse = Getattr(p, "tmap:directorin:parse");
 	  if (!parse) {
-	    sprintf(source, "obj%d", idx++);
-	    String *input = NewStringf("&%s", source);
+	    String *input = NewStringf("&args[%d]", idx++);
 	    Setattr(p, "emit:directorinput", input);
 	    Replaceall(tm, "$input", input);
 	    Delete(input);
 	    Replaceall(tm, "$owner", "0");
-	    Printv(wrap_args, "zval ", source, ";\n", NIL);
-	    Printf(wrap_args, "args[%d] = &%s;\n", idx - 1, source);
-	    Printv(wrap_args, "INIT_ZVAL(", source, ");\n", NIL);
-
 	    Printv(wrap_args, tm, "\n", NIL);
 	    Putc('O', parse_args);
 	  } else {
@@ -2640,23 +2632,22 @@ done:
       }
 
       if (!idx) {
-	Printf(w->code, "zval **args = NULL;\n");
+	Printf(w->code, "zval *args = NULL;\n");
       } else {
-	Printf(w->code, "zval *args[%d];\n", idx);
+	Printf(w->code, "zval args[%d];\n", idx);
       }
-      Printf(w->code, "zval *%s, funcname;\n", Swig_cresult_name());
+      Printf(w->code, "zval %s, funcname;\n", Swig_cresult_name());
       Append(w->code, "if (!swig_self) {\n");
       Append(w->code, "  SWIG_PHP_Error(E_ERROR, \"this pointer is NULL\");");
       Append(w->code, "}\n\n");
-      Printf(w->code, "MAKE_STD_ZVAL(%s);\n", Swig_cresult_name());
       const char * funcname = GetChar(n, "sym:name");
-      Printf(w->code, "ZVAL_STRINGL(&funcname, (char *)\"%s\", %d, 0);\n", funcname, strlen(funcname));
+      Printf(w->code, "ZVAL_STRINGL(&funcname, (char *)\"%s\", %d);\n", funcname, strlen(funcname));
 
       /* wrap complex arguments to zvals */
       Printv(w->code, wrap_args, NIL);
 
       Append(w->code, "call_user_function(EG(function_table), (zval**)&swig_self, &funcname,");
-      Printf(w->code, " %s, %d, args TSRMLS_CC);\n", Swig_cresult_name(), idx);
+      Printf(w->code, " &%s, %d, args TSRMLS_CC);\n", Swig_cresult_name(), idx);
 
       if (tm) {
 	Printv(w->code, Str(tm), "\n", NIL);

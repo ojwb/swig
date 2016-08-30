@@ -13,7 +13,7 @@
 %fragment("swig_php_init_member_ptr2", "header") {
 #define SWIG_MEMBER_PTR ((char*)"CLASS::*")
 
-static void swig_member_ptr_dtor(zend_rsrc_list_entry *rsrc TSRMLS_DC) {
+static void swig_member_ptr_dtor(zend_resource *rsrc TSRMLS_DC) {
   efree(rsrc->ptr);
 }
 
