@@ -183,7 +183,7 @@
                  void *&
 {
   if (force$argnum) {
-    SWIG_SetPointerZval( *$input, (void*) ptr$argnum, $*1_descriptor, 1);
+    SWIG_SetPointerZval(&$input, (void*) ptr$argnum, $*1_descriptor, 1);
   }
 }
 
