@@ -185,7 +185,7 @@
 %typemap(varin, fragment="swig_php_init_member_ptr") SWIGTYPE (CLASS::*)
 {
   zval *z_var = zend_hash_str_find(&EG(symbol_table), "$1", sizeof("$1") - 1);
-  void * p = (void*)zend_fetch_resource(z_var TSRMLS_CC, -1, SWIG_MEMBER_PTR, NULL, 1, swig_member_ptr);
+  void * p = (void*)zend_fetch_resource_ex(z_var TSRMLS_CC, SWIG_MEMBER_PTR, swig_member_ptr);
   memcpy(&$1, p, sizeof($1));
 }
 
