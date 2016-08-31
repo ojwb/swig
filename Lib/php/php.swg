@@ -442,7 +442,13 @@
 // it yourself before passing it (e.g. (string)4.7 or (int)"6").
 %define %php_typecheck(_type,_prec,is)
 %typemap(typecheck,precedence=_prec) _type, const _type &
- " $1 = (Z_TYPE($input) == is); "
+ " $1 = (Z_TYPE($input) == is);"
+%enddef
+
+// Like %php_typecheck but allows either of two values.
+%define %php_typecheck2(_type,_prec,is1,is2)
+%typemap(typecheck,precedence=_prec) _type, const _type &
+ " $1 = (Z_TYPE($input) == is1 || Z_TYPE($input) == is2);"
 %enddef
 
 %php_typecheck(int,SWIG_TYPECHECK_INTEGER,IS_LONG)
@@ -457,7 +463,7 @@
 %php_typecheck(unsigned char,SWIG_TYPECHECK_UINT8,IS_LONG)
 %php_typecheck(size_t,SWIG_TYPECHECK_SIZE,IS_LONG)
 %php_typecheck(enum SWIGTYPE,SWIG_TYPECHECK_INTEGER,IS_LONG)
-%php_typecheck(bool,SWIG_TYPECHECK_BOOL,IS_BOOL)
+%php_typecheck2(bool,SWIG_TYPECHECK_BOOL,IS_TRUE,IS_FALSE)
 %php_typecheck(float,SWIG_TYPECHECK_FLOAT,IS_DOUBLE)
 %php_typecheck(double,SWIG_TYPECHECK_DOUBLE,IS_DOUBLE)
 %php_typecheck(char,SWIG_TYPECHECK_CHAR,IS_STRING)
