@@ -297,7 +297,7 @@ INT_TYPEMAP(unsigned long long);
                  void *&OUTPUT
 %{
   if (force$argnum) {  /* pass back arg$argnum through params ($arg) if we can */
-    if (!PZVAL_IS_REF(*$arg)) {
+    if (!Z_ISREF($arg)) {
       SWIG_PHP_Error(E_WARNING, "Parameter $argnum of $symname wasn't passed by reference");
     } else {
       SWIG_SetPointerZval(*$arg, (void *) ptr$argnum, $*1_descriptor, 1);

@@ -162,7 +162,7 @@
      This bit should go in arginit if arginit support init-ing scripting args */
   if (SWIG_ConvertPtr(&$input, (void **) &$1, $1_descriptor, 0) < 0) {
     /* So... we didn't get a ref or ptr, but we'll accept NULL by reference */
-    if (!((*$input)->type==IS_NULL && PZVAL_IS_REF(*$input))) {
+    if (!(Z_ISREF($input) && Z_ISNULL_P(Z_REFVAL($input)))) {
       /* wasn't a pre/ref/thing, OR anything like an int thing */
       SWIG_PHP_Error(E_ERROR, "Type error in argument $arg of $symname.");
     }
