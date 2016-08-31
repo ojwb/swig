@@ -38,19 +38,19 @@ namespace std {
     %}
 
     %typemap(out) string %{
-        ZVAL_STRINGL($result, const_cast<char*>($1.data()), $1.size());
+        ZVAL_STRINGL($result, $1.data(), $1.size());
     %}
 
     %typemap(directorin) string, const string& %{
-        ZVAL_STRINGL($input, const_cast<char*>($1.data()), $1.size());
+        ZVAL_STRINGL($input, $1.data(), $1.size());
     %}
 
     %typemap(out) const string & %{
-        ZVAL_STRINGL($result, const_cast<char*>($1->data()), $1->size());
+        ZVAL_STRINGL($result, $1->data(), $1->size());
     %}
 
     %typemap(throws) string, const string& %{
-        zend_throw_exception(NULL, const_cast<char*>($1.c_str()), 0 TSRMLS_CC);
+        zend_throw_exception(NULL, $1.c_str(), 0 TSRMLS_CC);
         return;
     %}
 
@@ -70,7 +70,7 @@ namespace std {
     %}
 
     %typemap(argout) string & %{
-	ZVAL_STRINGL(*($input), const_cast<char*>($1->data()), $1->size());
+	ZVAL_STRINGL(*($input), $1->data(), $1->size());
     %}
 
     /* SWIG will apply the non-const typemap above to const string& without

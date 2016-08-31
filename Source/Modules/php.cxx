@@ -170,7 +170,7 @@ static void SwigPHP_emit_resource_registrations() {
 
     // register with php
     Printf(s_oinit, "le_swig_%s=zend_register_list_destructors_ex"
-		    "(_wrap_destroy%s,NULL,(char *)(SWIGTYPE%s->name),module_number);\n", key, key, key);
+		    "(_wrap_destroy%s, NULL, SWIGTYPE%s->name, module_number);\n", key, key, key);
 
     // store php type in class struct
     Printf(s_oinit, "SWIG_TypeClientData(SWIGTYPE%s,&le_swig_%s);\n", key, key);
@@ -523,7 +523,7 @@ public:
     Append(s_init, "#endif\n");
     Printv(s_init, "zend_module_entry ", module, "_module_entry = {\n", NIL);
     Printf(s_init, "    STANDARD_MODULE_HEADER,\n");
-    Printf(s_init, "    (char*)\"%s\",\n", module);
+    Printf(s_init, "    \"%s\",\n", module);
     Printf(s_init, "    %s_functions,\n", module);
     Printf(s_init, "    PHP_MINIT(%s),\n", module);
     Printf(s_init, "    PHP_MSHUTDOWN(%s),\n", module);
@@ -913,7 +913,7 @@ public:
 
     if (is_member_director(n)) {
       Wrapper_add_local(f, "upcall", "bool upcall = false");
-      Printf(f->code, "upcall = !Swig::Director::swig_is_overridden_method((char *)\"%s%s\", (char *)\"%s\" TSRMLS_CC);\n",
+      Printf(f->code, "upcall = !Swig::Director::swig_is_overridden_method(\"%s%s\", \"%s\" TSRMLS_CC);\n",
 	  prefix, Swig_class_name(Swig_methodclass(n)), name);
     }
 

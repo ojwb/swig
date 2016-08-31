@@ -13,7 +13,7 @@
   } else {
     ZVAL_STR(&z_var, ZSTR_EMPTY_ALLOC());
   }
-  zend_hash_str_add(&EG(symbol_table), (char*)"$1", sizeof("$1") - 1, &z_var);
+  zend_hash_str_add(&EG(symbol_table), "$1", sizeof("$1") - 1, &z_var);
 }
 
 %typemap(varinit) int,
@@ -29,21 +29,21 @@
 {
   zval z_var;
   ZVAL_LONG(&z_var, (long)$1);
-  zend_hash_str_add(&EG(symbol_table), (char*)"$1", sizeof("$1") - 1, &z_var);
+  zend_hash_str_add(&EG(symbol_table), "$1", sizeof("$1") - 1, &z_var);
 }
 
 %typemap(varinit) bool
 {
   zval z_var;
   ZVAL_BOOL(&z_var, ($1)?1:0);
-  zend_hash_str_add(&EG(symbol_table), (char*)"$1", sizeof("$1") - 1, &z_var);
+  zend_hash_str_add(&EG(symbol_table), "$1", sizeof("$1") - 1, &z_var);
 }
 
 %typemap(varinit) float, double
 {
   zval z_var;
   ZVAL_DOUBLE(&z_var, (double)$1);
-  zend_hash_str_add(&EG(symbol_table), (char*)"$1", sizeof("$1") - 1, &z_var);
+  zend_hash_str_add(&EG(symbol_table), "$1", sizeof("$1") - 1, &z_var);
 }
 
 %typemap(varinit) char
@@ -51,21 +51,21 @@
   zval z_var;
   char c = $1;
   ZVAL_STRINGL(&z_var, &c, 1);
-  zend_hash_str_add(&EG(symbol_table), (char*)"$1", sizeof("$1") - 1, &z_var);
+  zend_hash_str_add(&EG(symbol_table), "$1", sizeof("$1") - 1, &z_var);
 }
 
 %typemap(varinit) SWIGTYPE *, SWIGTYPE []
 {
   zval z_var;
   SWIG_SetPointerZval(&z_var, (void*)$1, $1_descriptor, 0);
-  zend_hash_str_add(&EG(symbol_table), (char*)"$1", sizeof("$1") - 1, &z_var);
+  zend_hash_str_add(&EG(symbol_table), "$1", sizeof("$1") - 1, &z_var);
 }
 
 %typemap(varinit) SWIGTYPE, SWIGTYPE &, SWIGTYPE &&
 {
   zval z_var;
   SWIG_SetPointerZval(&z_var, (void*)&$1, $&1_descriptor, 0);
-  zend_hash_str_add(&EG(symbol_table), (char*)"$1", sizeof("$1") - 1, &z_var);
+  zend_hash_str_add(&EG(symbol_table), "$1", sizeof("$1") - 1, &z_var);
 }
 
 %typemap(varinit) char [ANY]
@@ -73,11 +73,11 @@
   zval z_var;
   if ($1) {
     /* varinit char [ANY] */
-    ZVAL_STRINGL(&z_var, (char*)$1, $1_dim0);
+    ZVAL_STRINGL(&z_var, $1, $1_dim0);
   } else {
     ZVAL_STR(&z_var, ZSTR_EMPTY_ALLOC());
   }
-  zend_hash_str_add(&EG(symbol_table), (char*)"$1", sizeof("$1") - 1, &z_var);
+  zend_hash_str_add(&EG(symbol_table), "$1", sizeof("$1") - 1, &z_var);
 }
 
 %typemap(varinit, fragment="swig_php_init_member_ptr") SWIGTYPE (CLASS::*)
@@ -86,18 +86,18 @@
   void * p = emalloc(sizeof($1));
   memcpy(p, &$1, sizeof($1));
   ZVAL_RES(&resource, zend_register_resource(p, swig_member_ptr));
-  zend_hash_str_add(&EG(symbol_table), (char*)"$1", sizeof("$1") - 1, &resource);
+  zend_hash_str_add(&EG(symbol_table), "$1", sizeof("$1") - 1, &resource);
 }
 
 %typemap(varin) int, unsigned int, short, unsigned short, long, unsigned long, signed char, unsigned char,  enum SWIGTYPE
 {
-  zval *z_var = zend_hash_str_find(&EG(symbol_table), (char*)"$1", sizeof("$1") - 1);
+  zval *z_var = zend_hash_str_find(&EG(symbol_table), "$1", sizeof("$1") - 1);
   $1 = zval_get_long(z_var);
 }
 
 %typemap(varin) bool
 {
-  zval *z_var = zend_hash_str_find(&EG(symbol_table), (char*)"$1", sizeof("$1") - 1);
+  zval *z_var = zend_hash_str_find(&EG(symbol_table), "$1", sizeof("$1") - 1);
   convert_to_boolean_ex(z_var);
   if ($1 != ($1_ltype)(z_var->value.lval)) {
     $1 = Z_LVAL_P(z_var);
@@ -106,13 +106,13 @@
 
 %typemap(varin) double,float
 {
-  zval *z_var = zend_hash_str_find(&EG(symbol_table), (char*)"$1", sizeof("$1") - 1);
+  zval *z_var = zend_hash_str_find(&EG(symbol_table), "$1", sizeof("$1") - 1);
   $1 = zval_get_double(z_var);
 }
 
 %typemap(varin) char
 {
-  zval *z_var = zend_hash_str_find(&EG(symbol_table), (char*)"$1", sizeof("$1") - 1);
+  zval *z_var = zend_hash_str_find(&EG(symbol_table), "$1", sizeof("$1") - 1);
   convert_to_string_ex(z_var);
   if ($1 != Z_STRVAL_P(z_var)[0]) {
     $1 = Z_STRVAL_P(z_var)[0];

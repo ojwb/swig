@@ -14,15 +14,9 @@ extern "C" {
 #include "ext/standard/php_string.h"
 #include <stdlib.h> /* for abort(), used in generated code. */
 
-#ifdef ZEND_RAW_FENTRY
-/* ZEND_RAW_FENTRY was added somewhere between 5.2.0 and 5.2.3 */
-# define SWIG_ZEND_NAMED_FE(ZN, N, A) ZEND_RAW_FENTRY((char*)#ZN, N, A, 0)
-#else
-/* This causes warnings from GCC >= 4.2 (assigning a string literal to char*).
- * But this seems to be unavoidable without directly assuming knowledge of
- * the structure, which changed between PHP4 and PHP5. */
-# define SWIG_ZEND_NAMED_FE(ZN, N, A) ZEND_NAMED_FE(ZN, N, A)
-#endif
+/* This indirection is to work around const correctness issues in older PHP.
+ * FIXME: Remove for PHP7?  Or might user code be using it? */
+#define SWIG_ZEND_NAMED_FE(ZN, N, A) ZEND_NAMED_FE(ZN, N, A)
 
 #ifndef ZEND_FE_END
 # define ZEND_FE_END { NULL, NULL, NULL }

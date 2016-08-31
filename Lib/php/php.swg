@@ -298,7 +298,7 @@
     if(!$1) {
       ZVAL_NULL($input);
     } else {
-      ZVAL_STRING($input, (char *)$1);
+      ZVAL_STRING($input, (const char*)$1);
     }
 }
 
@@ -351,7 +351,7 @@
   if (!$1) {
     RETVAL_NULL();
   } else {
-    RETVAL_STRING((char *)$1);
+    RETVAL_STRING((const char *)$1);
   }
 }
 
@@ -360,7 +360,7 @@
   if (!*$1) {
     RETVAL_NULL();
   } else {
-    RETVAL_STRING((char *)*$1);
+    RETVAL_STRING((const char *)*$1);
   }
 }
 
@@ -508,18 +508,18 @@
                  unsigned int,
                  unsigned long,
                  unsigned short {
-  zend_throw_exception(NULL, const_cast<char*>("C++ $1_type exception thrown"), $1 TSRMLS_CC);
+  zend_throw_exception(NULL, "C++ $1_type exception thrown", $1 TSRMLS_CC);
   return;
 }
 
 %typemap(throws) SWIGTYPE, SWIGTYPE &, SWIGTYPE &&, SWIGTYPE *, SWIGTYPE [], SWIGTYPE [ANY] %{
   (void)$1;
-  zend_throw_exception(NULL, const_cast<char*>("C++ $1_type exception thrown"), 0 TSRMLS_CC);
+  zend_throw_exception(NULL, "C++ $1_type exception thrown", 0 TSRMLS_CC);
   return;
 %}
 
 %typemap(throws) char * %{
-  zend_throw_exception(NULL, const_cast<char*>($1), 0 TSRMLS_CC);
+  zend_throw_exception(NULL, $1, 0 TSRMLS_CC);
   return;
 %}
 
