@@ -77,7 +77,8 @@ namespace Swig {
 
   class Director {
     protected:
-      zval *swig_self;
+      // "mutable" so we can get a non-const pointer to it in const methods.
+      mutable zval swig_self;
       typedef std::map<void *, GCItem_var> swig_ownership_map;
       mutable swig_ownership_map swig_owner;
 #ifdef ZTS
@@ -85,7 +86,8 @@ namespace Swig {
       void *** swig_zts_ctx;
 #endif
     public:
-      Director(zval *self TSRMLS_DC) : swig_self(self) {
+      Director(zval *self TSRMLS_DC) {
+        ZVAL_COPY(&swig_self, self);
         TSRMLS_SET_CTX(swig_zts_ctx);
       }
 

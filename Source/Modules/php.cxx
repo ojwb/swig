@@ -2637,16 +2637,13 @@ done:
 	Printf(w->code, "zval args[%d];\n", idx);
       }
       Printf(w->code, "zval %s, funcname;\n", Swig_cresult_name());
-      Append(w->code, "if (!swig_self) {\n");
-      Append(w->code, "  SWIG_PHP_Error(E_ERROR, \"this pointer is NULL\");");
-      Append(w->code, "}\n\n");
       const char * funcname = GetChar(n, "sym:name");
       Printf(w->code, "ZVAL_STRINGL(&funcname, \"%s\", %d);\n", funcname, strlen(funcname));
 
       /* wrap complex arguments to zvals */
       Printv(w->code, wrap_args, NIL);
 
-      Append(w->code, "call_user_function(EG(function_table), swig_self, &funcname,");
+      Append(w->code, "call_user_function(EG(function_table), &swig_self, &funcname,");
       Printf(w->code, " &%s, %d, args TSRMLS_CC);\n", Swig_cresult_name(), idx);
 
       if (tm) {
