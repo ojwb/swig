@@ -2636,15 +2636,19 @@ done:
       } else {
 	Printf(w->code, "zval args[%d];\n", idx);
       }
-      Printf(w->code, "zval %s, funcname;\n", Swig_cresult_name());
+      // typemap_directorout testcase requires that 0 can be assigned to the
+      // variable named after the result of Swig_cresult_name(), so that can't
+      // be a zval - make it a pointer to one instead.
+      Printf(w->code, "zval swig_zval_result, swig_funcname;\n", Swig_cresult_name());
+      Printf(w->code, "zval *%s = &swig_zval_result;\n", Swig_cresult_name());
       const char * funcname = GetChar(n, "sym:name");
-      Printf(w->code, "ZVAL_STRINGL(&funcname, \"%s\", %d);\n", funcname, strlen(funcname));
+      Printf(w->code, "ZVAL_STRINGL(&swig_funcname, \"%s\", %d);\n", funcname, strlen(funcname));
 
       /* wrap complex arguments to zvals */
       Printv(w->code, wrap_args, NIL);
 
-      Append(w->code, "call_user_function(EG(function_table), &swig_self, &funcname,");
-      Printf(w->code, " &%s, %d, args TSRMLS_CC);\n", Swig_cresult_name(), idx);
+      Append(w->code, "call_user_function(EG(function_table), &swig_self, &swig_funcname,");
+      Printf(w->code, " &swig_zval_result, %d, args TSRMLS_CC);\n", idx);
 
       if (tm) {
 	Printv(w->code, Str(tm), "\n", NIL);
