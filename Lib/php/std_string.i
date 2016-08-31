@@ -70,7 +70,7 @@ namespace std {
     %}
 
     %typemap(argout) string & %{
-	ZVAL_STRINGL(*($input), $1->data(), $1->size());
+	ZVAL_STRINGL(&$input, $1->data(), $1->size());
     %}
 
     /* SWIG will apply the non-const typemap above to const string& without
