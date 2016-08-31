@@ -200,34 +200,32 @@
               bool,
               size_t
 {
-	ZVAL_LONG(return_value,$1);
+  RETVAL_LONG($1);
 }
 
 %typemap(out) enum SWIGTYPE
 {
-	ZVAL_LONG(return_value, (long)$1);
+  RETVAL_LONG((long)$1);
 }
 
 %typemap(out) long long
 %{
   if ((long long)LONG_MIN <= $1 && $1 <= (long long)LONG_MAX) {
-    return_value->value.lval = (long)($1);
-    return_value->type = IS_LONG;
+    RETVAL_LONG((long)($1));
   } else {
     char temp[256];
     sprintf(temp, "%lld", (long long)$1);
-    ZVAL_STRING(return_value, temp);
+    RETVAL_STRING(temp);
   }
 %}
 %typemap(out) unsigned long long
 %{
   if ($1 <= (unsigned long long)LONG_MAX) {
-    return_value->value.lval = (long)($1);
-    return_value->type = IS_LONG;
+    RETVAL_LONG((long)($1));
   } else {
     char temp[256];
     sprintf(temp, "%llu", (unsigned long long)$1);
-    ZVAL_STRING(return_value, temp);
+    RETVAL_STRING(temp);
   }
 %}
 
@@ -242,39 +240,37 @@
               const bool &,
               const size_t &
 {
-	ZVAL_LONG(return_value,*$1);
+  RETVAL_LONG(*$1);
 }
 
 %typemap(out) const enum SWIGTYPE &
 {
-	ZVAL_LONG(return_value, (long)*$1);
+  RETVAL_LONG((long)*$1);
 }
 
 %typemap(out) const enum SWIGTYPE &&
 {
-	ZVAL_LONG(return_value, (long)*$1);
+  RETVAL_LONG((long)*$1);
 }
 
 %typemap(out) const long long &
 %{
   if ((long long)LONG_MIN <= *$1 && *$1 <= (long long)LONG_MAX) {
-    return_value->value.lval = (long)(*$1);
-    return_value->type = IS_LONG;
+    RETVAL_LONG((long)(*$1));
   } else {
     char temp[256];
     sprintf(temp, "%lld", (long long)(*$1));
-    ZVAL_STRING(return_value, temp);
+    RETVAL_STRING(temp);
   }
 %}
 %typemap(out) const unsigned long long &
 %{
   if (*$1 <= (unsigned long long)LONG_MAX) {
-    return_value->value.lval = (long)(*$1);
-    return_value->type = IS_LONG;
+    RETVAL_LONG((long)(*$1));
   } else {
     char temp[256];
     sprintf(temp, "%llu", (unsigned long long)(*$1));
-    ZVAL_STRING(return_value, temp);
+    RETVAL_STRING(temp);
   }
 %}
 
@@ -308,64 +304,64 @@
 
 %typemap(out) bool
 {
-	ZVAL_BOOL(return_value,($1)?1:0);
+  RETVAL_BOOL(($1) ? 1 : 0);
 }
 
 %typemap(out) const bool &
 {
-	ZVAL_BOOL(return_value,(*$1)?1:0);
+  RETVAL_BOOL((*$1) ? 1 : 0);
 }
 
 %typemap(directorin) bool
 {
-	ZVAL_BOOL($input,($1)?1:0);
+  ZVAL_BOOL($input, ($1) ? 1 : 0);
 }
 
 %typemap(out) float,
               double
 {
-	ZVAL_DOUBLE(return_value,$1);
+  RETVAL_DOUBLE($1);
 }
 
 %typemap(out) const float &,
               const double &
 {
-	ZVAL_DOUBLE(return_value,*$1);
+  RETVAL_DOUBLE(*$1);
 }
 
 %typemap(directorin) float,
                      double
 {
-	ZVAL_DOUBLE($input,$1);
+  ZVAL_DOUBLE($input, $1);
 }
 
 %typemap(out) char
 {
-	ZVAL_STRINGL(return_value, &$1, 1);
+  RETVAL_STRINGL(&$1, 1);
 }
 
 %typemap(out) const char &
 {
-	ZVAL_STRINGL(return_value, &*$1, 1);
+  RETVAL_STRINGL(&*$1, 1);
 }
 
 %typemap(out) char *,
               char []
 {
-	if(!$1) {
-	  ZVAL_NULL(return_value);
-	} else {
-	  ZVAL_STRING(return_value, (char *)$1);
-	}
+  if (!$1) {
+    RETVAL_NULL();
+  } else {
+    RETVAL_STRING((char *)$1);
+  }
 }
 
 %typemap(out) char *&
 {
-	if(!*$1) {
-	  ZVAL_NULL(return_value);
-	} else {
-	  ZVAL_STRING(return_value, (char *)*$1);
-	}
+  if (!*$1) {
+    RETVAL_NULL();
+  } else {
+    RETVAL_STRING((char *)*$1);
+  }
 }
 
 %typemap(out) SWIGTYPE *,
