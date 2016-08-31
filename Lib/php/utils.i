@@ -8,14 +8,14 @@
 %enddef
 
 %define CONVERT_LONG_LONG_IN(lvar,t,invar)
-  switch (Z_TYPE(&invar)) {
+  switch (Z_TYPE(invar)) {
       case IS_DOUBLE:
-          lvar = (t) Z_DVAL(&invar);
+          lvar = (t) Z_DVAL(invar);
           break;
       case IS_STRING: {
           char * endptr;
           errno = 0;
-          lvar = (t) strtoll((*(invar))->value.str.val, &endptr, 10);
+          lvar = (t) strtoll(Z_STRVAL(invar), &endptr, 10);
           if (*endptr && !errno) break;
           /* FALL THRU */
       }
@@ -25,14 +25,14 @@
 %enddef
 
 %define CONVERT_UNSIGNED_LONG_LONG_IN(lvar,t,invar)
-  switch (Z_TYPE(&invar)) {
+  switch (Z_TYPE(invar)) {
       case IS_DOUBLE:
-          lvar = (t) (*(invar))->value.dval;
+          lvar = (t) Z_DVAL(invar);
           break;
       case IS_STRING: {
           char * endptr;
           errno = 0;
-          lvar = (t) strtoull((*(invar))->value.str.val, &endptr, 10);
+          lvar = (t) strtoull(Z_STRVAL(invar), &endptr, 10);
           if (*endptr && !errno) break;
           /* FALL THRU */
       }

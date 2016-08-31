@@ -146,8 +146,7 @@ INT_TYPEMAP(long long);
 %typemap(argout) long long &OUTPUT
 %{
   if ((long long)LONG_MIN <= *arg$argnum && *arg$argnum <= (long long)LONG_MAX) {
-    ($result)->value.lval = (long)(*arg$argnum);
-    ($result)->type = IS_LONG;
+    ZVAL_LONG($result, (long)(*arg$argnum));
   } else {
     char temp[256];
     sprintf(temp, "%lld", (long long)(*arg$argnum));
