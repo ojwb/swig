@@ -27,8 +27,8 @@
 %define BOOL_TYPEMAP(TYPE)
 %typemap(in) TYPE *INPUT(TYPE temp), TYPE &INPUT(TYPE temp)
 %{
-  convert_to_boolean_ex($input);
-  temp = Z_LVAL_PP($input) ? true : false;
+  convert_to_boolean_ex(&$input);
+  temp = Z_LVAL_P($input) ? true : false;
   $1 = &temp;
 %}
 %typemap(argout) TYPE *INPUT, TYPE &INPUT "";
@@ -36,8 +36,8 @@
 %typemap(argout,fragment="t_output_helper") TYPE *OUTPUT, TYPE &OUTPUT
 {
   zval o;
-  ZVAL_BOOL(&o, temp$argnum);
-  t_output_helper( &$result, o TSRMLS_CC );
+  ZVAL_BOOL(o, temp$argnum);
+  t_output_helper($result, &o TSRMLS_CC);
 }
 %typemap(in) TYPE *REFERENCE (TYPE lvalue), TYPE &REFERENCE (TYPE lvalue)
 %{
@@ -63,7 +63,7 @@
 {
   zval o;
   ZVAL_DOUBLE(&o, temp$argnum);
-  t_output_helper( &$result, o TSRMLS_CC );
+  t_output_helper($result, &o TSRMLS_CC);
 }
 %typemap(in) TYPE *REFERENCE (TYPE dvalue), TYPE &REFERENCE (TYPE dvalue)
 %{
@@ -88,7 +88,7 @@
 {
   zval o;
   ZVAL_LONG(&o, temp$argnum);
-  t_output_helper( &$result, o TSRMLS_CC );
+  t_output_helper($result, &o TSRMLS_CC);
 }
 %typemap(in) TYPE *REFERENCE (TYPE lvalue), TYPE &REFERENCE (TYPE lvalue)
 %{
@@ -124,9 +124,9 @@ INT_TYPEMAP(long long);
   } else {
     char temp[256];
     sprintf(temp, "%lld", (long long)temp$argnum);
-    ZVAL_STRING(&o, temp, 1);
+    ZVAL_STRING(&o, temp);
   }
-  t_output_helper( &$result, o TSRMLS_CC );
+  t_output_helper($result, &o TSRMLS_CC);
 }
 %typemap(in) TYPE *REFERENCE (long long lvalue)
 %{
@@ -140,7 +140,7 @@ INT_TYPEMAP(long long);
   } else {
     char temp[256];
     sprintf(temp, "%lld", (long long)lvalue$argnum);
-    ZVAL_STRING(&$arg, temp, 1);
+    ZVAL_STRING(&$arg, temp);
   }
 %}
 %typemap(argout) long long &OUTPUT
@@ -151,7 +151,7 @@ INT_TYPEMAP(long long);
   } else {
     char temp[256];
     sprintf(temp, "%lld", (long long)(*arg$argnum));
-    ZVAL_STRING($result, temp, 1);
+    ZVAL_STRING($result, temp);
   }
 %}
 INT_TYPEMAP(unsigned long long);
@@ -165,7 +165,7 @@ INT_TYPEMAP(unsigned long long);
     sprintf(temp, "%llu", (unsigned long long)temp$argnum);
     ZVAL_STRING(&o, temp);
   }
-  t_output_helper( &$result, &o TSRMLS_CC );
+  t_output_helper($result, &o TSRMLS_CC);
 }
 %typemap(in) TYPE *REFERENCE (unsigned long long lvalue)
 %{
@@ -255,8 +255,8 @@ INT_TYPEMAP(unsigned long long);
 
 %typemap(in) char INPUT[ANY] ( char temp[$1_dim0] )
 %{
-  convert_to_string_ex($input);
-  strncpy(temp,Z_LVAL_PP($input),$1_dim0);
+  convert_to_string_ex(&$input);
+  strncpy(temp, Z_LVAL($input), $1_dim0);
   $1 = temp;
 %}
 %typemap(in,numinputs=0) char OUTPUT[ANY] ( char temp[$1_dim0] )
@@ -265,7 +265,7 @@ INT_TYPEMAP(unsigned long long);
 {
   zval o;
   ZVAL_STRINGL(&o, temp$argnum, $1_dim0);
-  t_output_helper( &$result, &o TSRMLS_CC );
+  t_output_helper($result, &o TSRMLS_CC);
 }
 
 %typemap(in,numinputs=0) void **OUTPUT (int force),

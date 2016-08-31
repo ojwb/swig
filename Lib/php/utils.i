@@ -50,16 +50,16 @@
 %enddef
 
 %define CONVERT_CHAR_IN(lvar,t,invar)
-  convert_to_string_ex(invar);
-  lvar = (t) *Z_STRVAL_PP(invar);
+  convert_to_string_ex(&invar);
+  lvar = (t) Z_STRVAL(invar)[0];
 %enddef
 
 %define CONVERT_STRING_IN(lvar,t,invar)
-  if ((*invar)->type==IS_NULL) {
+  if (Z_ISNULL(invar)) {
     lvar = (t) 0;
   } else {
-    convert_to_string_ex(invar);
-    lvar = (t) Z_STRVAL_PP(invar);
+    convert_to_string_ex(&invar);
+    lvar = (t) Z_STRVAL(invar);
   }
 %enddef
 
@@ -86,23 +86,21 @@
 
 %fragment("t_output_helper","header") %{
 static void
-t_output_helper(zval **target, zval *o TSRMLS_DC) {
-  zval *tmp;
-  if ( (*target)->type == IS_ARRAY ) {
+t_output_helper(zval *target, zval *o TSRMLS_DC) {
+  zval tmp;
+  if (Z_TYPE_P(target) == IS_ARRAY) {
     /* it's already an array, just append */
-    add_next_index_zval( *target, o );
+    add_next_index_zval(target, o);
     return;
   }
-  if ( (*target)->type == IS_NULL ) {
-    REPLACE_ZVAL_VALUE(target,o,1);
+  if (Z_TYPE_P(target) == IS_NULL) {
+    /* NULL isn't refcounted */
+    ZVAL_COPY_VALUE(target, o);
     return;
   }
-  ALLOC_INIT_ZVAL(tmp);
-  *tmp = **target;
-  zval_copy_ctor(tmp);
-  array_init(*target);
-  add_next_index_zval( *target, tmp);
-  add_next_index_zval( *target, o);
-
+  ZVAL_DUP(&tmp, target);
+  array_init(target);
+  add_next_index_zval(target, &tmp);
+  add_next_index_zval(target, o);
 }
 %}

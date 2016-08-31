@@ -708,12 +708,12 @@ public:
 
     Wrapper_add_local(f, "argc", "int argc");
 
-    Printf(tmp, "zval **argv[%d]", maxargs);
+    Printf(tmp, "zval argv[%d]", maxargs);
     Wrapper_add_local(f, "argv", tmp);
 
     Printf(f->code, "argc = ZEND_NUM_ARGS();\n");
 
-    Printf(f->code, "zend_get_parameters_array_ex(argc,argv);\n");
+    Printf(f->code, "zend_get_parameters_array_ex(argc, argv);\n");
 
     Replaceall(dispatch, "$args", "self,args");
 
@@ -2641,7 +2641,7 @@ done:
       Append(w->code, "  SWIG_PHP_Error(E_ERROR, \"this pointer is NULL\");");
       Append(w->code, "}\n\n");
       const char * funcname = GetChar(n, "sym:name");
-      Printf(w->code, "ZVAL_STRINGL(&funcname, (char *)\"%s\", %d);\n", funcname, strlen(funcname));
+      Printf(w->code, "ZVAL_STRINGL(&funcname, \"%s\", %d);\n", funcname, strlen(funcname));
 
       /* wrap complex arguments to zvals */
       Printv(w->code, wrap_args, NIL);

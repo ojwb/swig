@@ -33,12 +33,12 @@ extern "C" {
 # define Z_SET_REFCOUNT_P(z, rc) (z)->refcount = (rc)
 #endif
 
-#define SWIG_LONG_CONSTANT(N, V) zend_register_long_constant((char*)#N, sizeof(#N), V, CONST_CS | CONST_PERSISTENT, module_number TSRMLS_CC)
-#define SWIG_DOUBLE_CONSTANT(N, V) zend_register_double_constant((char*)#N, sizeof(#N), V, CONST_CS | CONST_PERSISTENT, module_number TSRMLS_CC)
-#define SWIG_STRING_CONSTANT(N, V) zend_register_stringl_constant((char*)#N, sizeof(#N), (char*)(V), strlen(V), CONST_CS | CONST_PERSISTENT, module_number TSRMLS_CC)
+#define SWIG_LONG_CONSTANT(N, V) REGISTER_LONG_CONSTANT(#N, V, CONST_CS | CONST_PERSISTENT)
+#define SWIG_DOUBLE_CONSTANT(N, V) REGISTER_DOUBLE_CONSTANT(#N, V, CONST_CS | CONST_PERSISTENT)
+#define SWIG_STRING_CONSTANT(N, V) REGISTER_STRING_CONSTANT(#N, V, CONST_CS | CONST_PERSISTENT)
 #define SWIG_CHAR_CONSTANT(N, V) do {\
-    static char swig_char = (V);\
-    zend_register_stringl_constant((char*)#N, sizeof(#N), &swig_char, 1, CONST_CS | CONST_PERSISTENT, module_number TSRMLS_CC);\
+    char swig_char = (V);\
+    REGISTER_STRINGL_CONSTANT(#N, &swig_char, 1, CONST_CS | CONST_PERSISTENT);\
 } while (0)
 
 /* These TSRMLS_ stuff should already be defined now, but with older php under
@@ -230,6 +230,9 @@ SWIG_ZTS_ConvertPtr(zval *z, void **ptr, swig_type_info *ty, int flags TSRMLS_DC
     case IS_OBJECT: {
       zval * _cPtr = zend_hash_str_find(HASH_OF(z), "_cPtr", sizeof("_cPtr") - 1);
       if (_cPtr) {
+	if (Z_TYPE_P(_cPtr) == IS_INDIRECT) {
+	  _cPtr = Z_INDIRECT_P(_cPtr);
+	}
 	if (Z_TYPE_P(_cPtr) == IS_RESOURCE) {
 	  *ptr = SWIG_ZTS_ConvertResourcePtr(_cPtr, ty, flags TSRMLS_CC);
 	  return (*ptr == NULL ? -1 : 0);

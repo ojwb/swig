@@ -72,14 +72,14 @@
 // so we have to size it
 %typemap(in) char[ANY]
 {
-   convert_to_string_ex($input);
-   $1 = ($1_ltype) Z_STRVAL_PP($input);
+   convert_to_string_ex(&$input);
+   $1 = ($1_ltype) Z_STRVAL($input);
 }
 
 %typemap(in) (char *STRING, int LENGTH), (char *STRING, size_t LENGTH) {
-   convert_to_string_ex($input);
-   $1 = ($1_ltype) Z_STRVAL_PP($input);
-   $2 = ($2_ltype) Z_STRLEN_PP($input);
+   convert_to_string_ex(&$input);
+   $1 = ($1_ltype) Z_STRVAL($input);
+   $2 = ($2_ltype) Z_STRLEN($input);
 }
 
 /* Object passed by value. Convert to a pointer */
@@ -216,7 +216,7 @@
   } else {
     char temp[256];
     sprintf(temp, "%lld", (long long)$1);
-    ZVAL_STRING(return_value, temp, 1);
+    ZVAL_STRING(return_value, temp);
   }
 %}
 %typemap(out) unsigned long long
@@ -227,7 +227,7 @@
   } else {
     char temp[256];
     sprintf(temp, "%llu", (unsigned long long)$1);
-    ZVAL_STRING(return_value, temp, 1);
+    ZVAL_STRING(return_value, temp);
   }
 %}
 
@@ -263,7 +263,7 @@
   } else {
     char temp[256];
     sprintf(temp, "%lld", (long long)(*$1));
-    ZVAL_STRING(return_value, temp, 1);
+    ZVAL_STRING(return_value, temp);
   }
 %}
 %typemap(out) const unsigned long long &
@@ -274,7 +274,7 @@
   } else {
     char temp[256];
     sprintf(temp, "%llu", (unsigned long long)(*$1));
-    ZVAL_STRING(return_value, temp, 1);
+    ZVAL_STRING(return_value, temp);
   }
 %}
 
@@ -302,7 +302,7 @@
     if(!$1) {
       ZVAL_NULL($input);
     } else {
-      ZVAL_STRING($input, (char *)$1, 1);
+      ZVAL_STRING($input, (char *)$1);
     }
 }
 
@@ -341,12 +341,12 @@
 
 %typemap(out) char
 {
-	ZVAL_STRINGL(return_value,&$1, 1, 1);
+	ZVAL_STRINGL(return_value, &$1, 1);
 }
 
 %typemap(out) const char &
 {
-	ZVAL_STRINGL(return_value,&*$1, 1, 1);
+	ZVAL_STRINGL(return_value, &*$1, 1);
 }
 
 %typemap(out) char *,
@@ -355,7 +355,7 @@
 	if(!$1) {
 	  ZVAL_NULL(return_value);
 	} else {
-	  ZVAL_STRING(return_value, (char *)$1, 1);
+	  ZVAL_STRING(return_value, (char *)$1);
 	}
 }
 
@@ -364,7 +364,7 @@
 	if(!*$1) {
 	  ZVAL_NULL(return_value);
 	} else {
-	  ZVAL_STRING(return_value, (char *)*$1, 1);
+	  ZVAL_STRING(return_value, (char *)*$1);
 	}
 }
 
@@ -438,7 +438,7 @@
 {
   int len = 0;
   while (len < $1_dim0 && $1[len]) ++len;
-  RETVAL_STRINGL($1, len, 1);
+  RETVAL_STRINGL($1, len);
 }
 
 // This typecheck does hard checking for proper argument type.  If you want
@@ -446,7 +446,7 @@
 // it yourself before passing it (e.g. (string)4.7 or (int)"6").
 %define %php_typecheck(_type,_prec,is)
 %typemap(typecheck,precedence=_prec) _type, const _type &
- " $1 = (Z_TYPE_PP($input) == is); "
+ " $1 = (Z_TYPE($input) == is); "
 %enddef
 
 %php_typecheck(int,SWIG_TYPECHECK_INTEGER,IS_LONG)
@@ -467,7 +467,7 @@
 %php_typecheck(char,SWIG_TYPECHECK_CHAR,IS_STRING)
 
 %typemap(typecheck,precedence=SWIG_TYPECHECK_STRING) char *, char *&, char []
- " $1 = (Z_TYPE_PP($input) == IS_STRING); "
+ " $1 = (Z_TYPE($input) == IS_STRING); "
 
 %typecheck(SWIG_TYPECHECK_POINTER) SWIGTYPE
 {

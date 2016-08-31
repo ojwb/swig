@@ -32,7 +32,7 @@ typedef struct SWIGCDATA {
 #elif SWIGPHP
 
 %typemap(out) SWIGCDATA {
-  ZVAL_STRINGL($result, $1.data, $1.len, 1);
+  ZVAL_STRINGL($result, $1.data, $1.len);
 }
 %typemap(in) (const void *indata, int inlen) = (char *STRING, int LENGTH);
 
