@@ -28,7 +28,7 @@
 %typemap(in) TYPE *INPUT(TYPE temp), TYPE &INPUT(TYPE temp)
 %{
   convert_to_boolean_ex(&$input);
-  temp = Z_LVAL_P($input) ? true : false;
+  temp = Z_LVAL($input) ? true : false;
   $1 = &temp;
 %}
 %typemap(argout) TYPE *INPUT, TYPE &INPUT "";
@@ -36,7 +36,7 @@
 %typemap(argout,fragment="t_output_helper") TYPE *OUTPUT, TYPE &OUTPUT
 {
   zval o;
-  ZVAL_BOOL(o, temp$argnum);
+  ZVAL_BOOL(&o, temp$argnum);
   t_output_helper($result, &o TSRMLS_CC);
 }
 %typemap(in) TYPE *REFERENCE (TYPE lvalue), TYPE &REFERENCE (TYPE lvalue)
