@@ -98,8 +98,10 @@ namespace Swig {
         if (ce) {
           zval * mptr = zend_hash_str_find(&ce->function_table, lc_fname, strlen(lc_fname));
           if (mptr) {
-            // common.scope points to the declaring class FIXME: is just the first test enough here?
-            result = Z_FUNC_P(mptr)->common.scope == ce || zend_string_equals(Z_FUNC_P(mptr)->common.scope->name, cname_str);
+            // common.scope points to zend_class_entry for the declaring class,
+            // and there's only one of those per class, so we can just use a
+            // pointer compare here.
+            result = Z_FUNC_P(mptr)->common.scope != ce;
           }
         }
         zend_string_release(cname_str);
