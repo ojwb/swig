@@ -26,30 +26,9 @@ extern "C" {
     REGISTER_STRINGL_CONSTANT(#N, &swig_char, 1, CONST_CS | CONST_PERSISTENT);\
 } while (0)
 
-/* These TSRMLS_ stuff should already be defined now, but with older php under
-   redhat are not... */
-#ifndef TSRMLS_D
-#define TSRMLS_D
-#endif
-#ifndef TSRMLS_DC
-#define TSRMLS_DC
-#endif
-#ifndef TSRMLS_C
-#define TSRMLS_C
-#endif
-#ifndef TSRMLS_CC
-#define TSRMLS_CC
-#endif
-
 #ifdef __cplusplus
 }
 #endif
-
-/* But in fact SWIG_ConvertPtr is the native interface for getting typed
-   pointer values out of zvals.  We need the TSRMLS_ macros for when we
-   make PHP type calls later as we handle php resources */
-#define SWIG_ConvertPtr(obj,pp,type,flags) SWIG_ZTS_ConvertPtr(obj,pp,type,flags TSRMLS_CC)
-
 
 #define SWIG_fail goto fail
 
@@ -74,11 +53,10 @@ typedef struct {
   int newobject;
 } swig_object_wrapper;
 
-#define SWIG_SetPointerZval(a,b,c,d) SWIG_ZTS_SetPointerZval(a,b,c,d TSRMLS_CC)
 #define SWIG_as_voidptr(a) const_cast< void * >(static_cast< const void * >(a))
 
 static void
-SWIG_ZTS_SetPointerZval(zval *z, void *ptr, swig_type_info *type, int newobject TSRMLS_DC) {
+SWIG_SetPointerZval(zval *z, void *ptr, swig_type_info *type, int newobject) {
   /*
    * First test for Null pointers.  Return those as PHP native NULL
    */
@@ -152,11 +130,11 @@ SWIG_ZTS_SetPointerZval(zval *z, void *ptr, swig_type_info *type, int newobject 
    instance of a resource of the type id, so we have to pass type_name as well.
 
    The two functions which might call this are:
-   SWIG_ZTS_ConvertResourcePtr which gets the type name from the resource
+   SWIG_ConvertResourcePtr which gets the type name from the resource
    and the registered zend destructors for which we have one per type each
    with the type name hard wired in. */
 static void *
-SWIG_ZTS_ConvertResourceData(void * p, const char *type_name, swig_type_info *ty TSRMLS_DC) {
+SWIG_ConvertResourceData(void * p, const char *type_name, swig_type_info *ty) {
   swig_cast_info *tc;
   void *result = 0;
 
@@ -183,9 +161,9 @@ SWIG_ZTS_ConvertResourceData(void * p, const char *type_name, swig_type_info *ty
 /* This function returns a pointer of type ty by extracting the pointer
    and type info from the resource in z.  z must be a resource.
    If it fails, NULL is returned.
-   It uses SWIG_ZTS_ConvertResourceData to do the real work. */
+   It uses SWIG_ConvertResourceData to do the real work. */
 static void *
-SWIG_ZTS_ConvertResourcePtr(zval *z, swig_type_info *ty, int flags TSRMLS_DC) {
+SWIG_ConvertResourcePtr(zval *z, swig_type_info *ty, int flags) {
   swig_object_wrapper *value;
   void *p;
   const char *type_name;
@@ -199,13 +177,13 @@ SWIG_ZTS_ConvertResourcePtr(zval *z, swig_type_info *ty, int flags TSRMLS_DC) {
 
   type_name=zend_rsrc_list_get_rsrc_type(Z_RES_P(z));
 
-  return SWIG_ZTS_ConvertResourceData(p, type_name, ty TSRMLS_CC);
+  return SWIG_ConvertResourceData(p, type_name, ty);
 }
 
 /* We allow passing of a RESOURCE pointing to the object or an OBJECT whose
    _cPtr is a resource pointing to the object */
 static int
-SWIG_ZTS_ConvertPtr(zval *z, void **ptr, swig_type_info *ty, int flags TSRMLS_DC) {
+SWIG_ConvertPtr(zval *z, void **ptr, swig_type_info *ty, int flags) {
   if (z == NULL) {
     *ptr = 0;
     return 0;
@@ -219,14 +197,14 @@ SWIG_ZTS_ConvertPtr(zval *z, void **ptr, swig_type_info *ty, int flags TSRMLS_DC
 	  _cPtr = Z_INDIRECT_P(_cPtr);
 	}
 	if (Z_TYPE_P(_cPtr) == IS_RESOURCE) {
-	  *ptr = SWIG_ZTS_ConvertResourcePtr(_cPtr, ty, flags TSRMLS_CC);
+	  *ptr = SWIG_ConvertResourcePtr(_cPtr, ty, flags);
 	  return (*ptr == NULL ? -1 : 0);
 	}
       }
       break;
     }
     case IS_RESOURCE:
-      *ptr = SWIG_ZTS_ConvertResourcePtr(z, ty, flags TSRMLS_CC);
+      *ptr = SWIG_ConvertResourcePtr(z, ty, flags);
       return (*ptr == NULL ? -1 : 0);
     case IS_NULL:
       *ptr = 0;
@@ -248,6 +226,5 @@ static swig_module_info *SWIG_Php_GetModule() {
 }
 
 static void SWIG_Php_SetModule(swig_module_info *pointer) {
-  TSRMLS_FETCH();
   REGISTER_MAIN_LONG_CONSTANT(const_name, (long) pointer, 0);
 }

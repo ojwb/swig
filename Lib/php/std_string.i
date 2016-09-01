@@ -50,7 +50,7 @@ namespace std {
     %}
 
     %typemap(throws) string, const string& %{
-        zend_throw_exception(NULL, $1.c_str(), 0 TSRMLS_CC);
+        zend_throw_exception(NULL, $1.c_str(), 0);
         return;
     %}
 

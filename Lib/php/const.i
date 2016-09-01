@@ -39,7 +39,7 @@
   c.name = zend_string_init("$symname", sizeof("$symname") - 1, 0);
   c.flags = CONST_CS;
   c.module_number = module_number;
-  zend_register_constant(&c TSRMLS_CC);
+  zend_register_constant(&c);
 }
 
 /* Handled as a global variable. */

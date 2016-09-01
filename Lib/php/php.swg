@@ -398,7 +398,7 @@
 
 %typemap(in, fragment="swig_php_init_member_ptr") SWIGTYPE (CLASS::*)
 {
-  void * p = (void*)zend_fetch_resource_ex(&$input TSRMLS_CC, SWIG_MEMBER_PTR, swig_member_ptr);
+  void * p = (void*)zend_fetch_resource_ex(&$input, SWIG_MEMBER_PTR, swig_member_ptr);
   memcpy(&$1, p, sizeof($1));
 }
 
@@ -508,18 +508,18 @@
                  unsigned int,
                  unsigned long,
                  unsigned short {
-  zend_throw_exception(NULL, "C++ $1_type exception thrown", $1 TSRMLS_CC);
+  zend_throw_exception(NULL, "C++ $1_type exception thrown", $1);
   return;
 }
 
 %typemap(throws) SWIGTYPE, SWIGTYPE &, SWIGTYPE &&, SWIGTYPE *, SWIGTYPE [], SWIGTYPE [ANY] %{
   (void)$1;
-  zend_throw_exception(NULL, "C++ $1_type exception thrown", 0 TSRMLS_CC);
+  zend_throw_exception(NULL, "C++ $1_type exception thrown", 0);
   return;
 %}
 
 %typemap(throws) char * %{
-  zend_throw_exception(NULL, $1, 0 TSRMLS_CC);
+  zend_throw_exception(NULL, $1, 0);
   return;
 %}
 

@@ -86,7 +86,7 @@
 
 %fragment("t_output_helper","header") %{
 static void
-t_output_helper(zval *target, zval *o TSRMLS_DC) {
+t_output_helper(zval *target, zval *o) {
   zval tmp;
   if (Z_TYPE_P(target) == IS_ARRAY) {
     /* it's already an array, just append */

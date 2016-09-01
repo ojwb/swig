@@ -152,7 +152,7 @@ static void SwigPHP_emit_resource_registrations() {
         human_name = Getattr(class_node, "name");
       // Do we have a known destructor for this type?
       if (destructor) {
-        Printf(s_wrappers, "  %s(res, SWIGTYPE%s->name TSRMLS_CC);\n", destructor, key);
+        Printf(s_wrappers, "  %s(res, SWIGTYPE%s->name);\n", destructor, key);
       } else {
         Printf(s_wrappers, "  /* No destructor for class %s */\n", human_name);
         Printf(s_wrappers, "  efree(res->ptr);\n");
@@ -180,23 +180,6 @@ static void SwigPHP_emit_resource_registrations() {
 }
 
 class PHP : public Language {
-  String *emit_action(Node *n) {
-    // Adjust wrap:action to add TSRMLS_CC.
-    String * action = Getattr(n, "wrap:action");
-    if (action) {
-      char * p = Strstr(action, "Swig::DirectorPureVirtualException::raise(\"");
-      if (p) {
-	p += strlen("Swig::DirectorPureVirtualException::raise(\"");
-	p = strchr(p, '"');
-	if (p) {
-	  ++p;
-	  Insert(action, (int)(p - Char(action)), " TSRMLS_CC");
-	}
-      }
-    }
-    return ::emit_action(n);
-  }
-
 public:
   PHP() {
     director_language = 1;
@@ -402,9 +385,9 @@ public:
      * which has to be dynamically generated as it depends on the module name.
      */
     Append(s_header, "#ifdef __GNUC__\n");
-    Append(s_header, "static void SWIG_FAIL(TSRMLS_D) __attribute__ ((__noreturn__));\n");
+    Append(s_header, "static void SWIG_FAIL(void) __attribute__ ((__noreturn__));\n");
     Append(s_header, "#endif\n\n");
-    Append(s_header, "static void SWIG_FAIL(TSRMLS_D) {\n");
+    Append(s_header, "static void SWIG_FAIL(void) {\n");
     Append(s_header, "    zend_error(SWIG_ErrorCode(), \"%s\", SWIG_ErrorMsg());\n");
     // zend_error() should never return with the parameters we pass, but if it
     // does, we really don't want to let SWIG_FAIL() return.  This also avoids
@@ -420,7 +403,7 @@ public:
     Printf(s_header, "static void %s_destroy_globals(zend_%s_globals * globals) { (void)globals; }\n", module, module);
 
     Printf(s_header, "\n");
-    Printf(s_header, "static void SWIG_ResetError(TSRMLS_D) {\n");
+    Printf(s_header, "static void SWIG_ResetError(void) {\n");
     Printf(s_header, "  SWIG_ErrorMsg() = default_error_msg;\n");
     Printf(s_header, "  SWIG_ErrorCode() = default_error_code;\n");
     Printf(s_header, "}\n");
@@ -430,7 +413,7 @@ public:
     Append(s_header, "  zval args[2];\n");
     Append(s_header, "  swig_object_wrapper *value;\n");
     Append(s_header, "\n");
-    Append(s_header, "  SWIG_ResetError(TSRMLS_C);\n");
+    Append(s_header, "  SWIG_ResetError();\n");
     Append(s_header, "  if(ZEND_NUM_ARGS() != 2 || zend_get_parameters_array_ex(2, args) != SUCCESS) {\n");
     Append(s_header, "    WRONG_PARAM_COUNT;\n");
     Append(s_header, "  }\n");
@@ -444,7 +427,7 @@ public:
     Append(s_header, "  zval args[1];\n");
     Append(s_header, "  swig_object_wrapper *value;\n");
     Append(s_header, "\n");
-    Append(s_header, "  SWIG_ResetError(TSRMLS_C);\n");
+    Append(s_header, "  SWIG_ResetError();\n");
     Append(s_header, "  if(ZEND_NUM_ARGS() != 1 || zend_get_parameters_array_ex(1, args) != SUCCESS) {\n");
     Append(s_header, "    WRONG_PARAM_COUNT;\n");
     Append(s_header, "  }\n");
@@ -721,7 +704,7 @@ public:
 
     Printf(f->code, "SWIG_ErrorCode() = E_ERROR;\n");
     Printf(f->code, "SWIG_ErrorMsg() = \"No matching function for overloaded '%s'\";\n", symname);
-    Printv(f->code, "SWIG_FAIL(TSRMLS_C);\n", NIL);
+    Printv(f->code, "SWIG_FAIL();\n", NIL);
 
     Printv(f->code, "}\n", NIL);
     Wrapper_print(f, s_wrappers);
@@ -832,7 +815,7 @@ public:
 
     // NOTE: possible we ignore this_ptr as a param for native constructor
 
-    Printf(f->code, "SWIG_ResetError(TSRMLS_C);\n");
+    Printf(f->code, "SWIG_ResetError();\n");
 
     if (numopt > 0) {		// membervariable wrappers do not have optional args
       Wrapper_add_local(f, "arg_count", "int arg_count");
@@ -913,7 +896,7 @@ public:
 
     if (is_member_director(n)) {
       Wrapper_add_local(f, "upcall", "bool upcall = false");
-      Printf(f->code, "upcall = !Swig::Director::swig_is_overridden_method(\"%s%s\", \"%s\" TSRMLS_CC);\n",
+      Printf(f->code, "upcall = !Swig::Director::swig_is_overridden_method(\"%s%s\", \"%s\");\n",
 	  prefix, Swig_class_name(Swig_methodclass(n)), name);
     }
 
@@ -1003,7 +986,7 @@ public:
     /* Error handling code */
     Printf(f->code, "fail:\n");
     Printv(f->code, cleanup, NIL);
-    Append(f->code, "SWIG_FAIL(TSRMLS_C);\n");
+    Append(f->code, "SWIG_FAIL();\n");
 
     Printf(f->code, "}\n");
 
@@ -2294,8 +2277,8 @@ done:
       if (i) {
 	Insert(args, 0, ", ");
       }
-      Printf(director_ctor_code, "} else {\n  %s = (%s *)new SwigDirector_%s(arg0 TSRMLS_CC%s);\n}\n", Swig_cresult_name(), ctype, sname, args);
-      Printf(director_prot_ctor_code, "} else {\n  %s = (%s *)new SwigDirector_%s(arg0 TSRMLS_CC%s);\n}\n", Swig_cresult_name(), ctype, sname, args);
+      Printf(director_ctor_code, "} else {\n  %s = (%s *)new SwigDirector_%s(arg0%s);\n}\n", Swig_cresult_name(), ctype, sname, args);
+      Printf(director_prot_ctor_code, "} else {\n  %s = (%s *)new SwigDirector_%s(arg0%s);\n}\n", Swig_cresult_name(), ctype, sname, args);
       Delete(args);
 
       wrapperType = directorconstructor;
@@ -2325,7 +2308,7 @@ done:
     Wrapper *f = NewWrapper();
     Printf(f->def, "/* This function is designed to be called by the zend list destructors */\n");
     Printf(f->def, "/* to typecast and do the actual destruction */\n");
-    Printf(f->def, "static void %s(zend_resource *res, const char *type_name TSRMLS_DC) {\n", destructorname);
+    Printf(f->def, "static void %s(zend_resource *res, const char *type_name) {\n", destructorname);
 
     Wrapper_add_localv(f, "value", "swig_object_wrapper *value=(swig_object_wrapper *) res->ptr", NIL);
     Wrapper_add_localv(f, "ptr", "void *ptr=value->ptr", NIL);
@@ -2345,7 +2328,7 @@ done:
 
     Printf(f->code, "  efree(value);\n");
     Printf(f->code, "  if (! newobject) return; /* can't delete it! */\n");
-    Printf(f->code, "  arg1 = (%s)SWIG_ZTS_ConvertResourceData(ptr,type_name,SWIGTYPE%s TSRMLS_CC);\n", SwigType_lstr(pt, 0), SwigType_manglestr(pt));
+    Printf(f->code, "  arg1 = (%s)SWIG_ConvertResourceData(ptr, type_name, SWIGTYPE%s);\n", SwigType_lstr(pt, 0), SwigType_manglestr(pt));
     Printf(f->code, "  if (! arg1) zend_error(E_ERROR, \"%s resource already free'd\");\n", Char(name));
 
     Setattr(n, "wrap:name", destructorname);
@@ -2356,7 +2339,7 @@ done:
 
     Append(f->code, "return;\n");
     Append(f->code, "fail:\n");
-    Append(f->code, "SWIG_FAIL(TSRMLS_C);\n");
+    Append(f->code, "SWIG_FAIL();\n");
     Printf(f->code, "}\n");
 
     Wrapper_print(f, s_wrappers);
@@ -2416,16 +2399,9 @@ done:
 	String *call;
 	String *basetype = Getattr(parent, "classtype");
 
-	// We put TSRMLS_DC after the self parameter in order to cope with
-	// any default parameters.
 	String *target = Swig_method_decl(0, decl, classname, parms, 0, 0);
-	const char * p = Char(target);
-	const char * comma = strchr(p, ',');
-	int ins = comma ? (int)(comma - p) : Len(target) - 1;
-	Insert(target, ins, " TSRMLS_DC");
-
 	call = Swig_csuperclass_call(0, basetype, superparms);
-	Printf(w->def, "%s::%s: %s, Swig::Director(self TSRMLS_CC) {", classname, target, call);
+	Printf(w->def, "%s::%s: %s, Swig::Director(self) {", classname, target, call);
 	Append(w->def, "}");
 	Delete(target);
 	Wrapper_print(w, f_directors);
@@ -2435,14 +2411,7 @@ done:
 
       /* constructor header */
       {
-	// We put TSRMLS_DC after the self parameter in order to cope with
-	// any default parameters.
 	String *target = Swig_method_decl(0, decl, classname, parms, 0, 1);
-	const char * p = Char(target);
-	const char * comma = strchr(p, ',');
-	int ins = comma ? (int)(comma - p) : Len(target) - 1;
-	Insert(target, ins, " TSRMLS_DC");
-
 	Printf(f_directors_h, "    %s;\n", target);
 	Delete(target);
       }
@@ -2527,8 +2496,6 @@ done:
     Append(w->def, " {");
     Append(declaration, ";\n");
 
-    Printf(w->code, "TSRMLS_FETCH_FROM_CTX(swig_zts_ctx);\n");
-
     /* declare method return value 
      * if the return value is a reference or const reference, a specialized typemap must
      * handle it, including declaration of c_result ($result).
@@ -2549,7 +2516,7 @@ done:
 	Printf(w->code, "%s;\n", super_call);
 	Delete(super_call);
       } else {
-	Printf(w->code, "Swig::DirectorPureVirtualException::raise(\"Attempted to invoke pure virtual method %s::%s\" TSRMLS_CC);\n", SwigType_namestr(c_classname),
+	Printf(w->code, "Swig::DirectorPureVirtualException::raise(\"Attempted to invoke pure virtual method %s::%s\");\n", SwigType_namestr(c_classname),
 	    SwigType_namestr(name));
       }
     } else {
@@ -2648,7 +2615,7 @@ done:
       Printv(w->code, wrap_args, NIL);
 
       Append(w->code, "call_user_function(EG(function_table), &swig_self, &swig_funcname,");
-      Printf(w->code, " &swig_zval_result, %d, args TSRMLS_CC);\n", idx);
+      Printf(w->code, " &swig_zval_result, %d, args);\n", idx);
 
       if (tm) {
 	Printv(w->code, Str(tm), "\n", NIL);
@@ -2720,7 +2687,7 @@ done:
     }
 
     Append(w->code, "fail:\n");
-    Append(w->code, "SWIG_FAIL(TSRMLS_C);\n");
+    Append(w->code, "SWIG_FAIL();\n");
     Append(w->code, "}\n");
 
     // We expose protected methods via an extra public inline method which makes a straight call to the wrapped class' method
