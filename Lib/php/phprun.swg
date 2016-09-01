@@ -18,15 +18,6 @@ extern "C" {
  * FIXME: Remove for PHP7?  Or might user code be using it? */
 #define SWIG_ZEND_NAMED_FE(ZN, N, A) ZEND_NAMED_FE(ZN, N, A)
 
-#ifndef ZEND_FE_END
-# define ZEND_FE_END { NULL, NULL, NULL }
-#endif
-
-#ifndef Z_SET_REFCOUNT_P
-/* For PHP < 5.3 */
-# define Z_SET_REFCOUNT_P(z, rc) (z)->refcount = (rc)
-#endif
-
 #define SWIG_LONG_CONSTANT(N, V) REGISTER_LONG_CONSTANT(#N, V, CONST_CS | CONST_PERSISTENT)
 #define SWIG_DOUBLE_CONSTANT(N, V) REGISTER_DOUBLE_CONSTANT(#N, V, CONST_CS | CONST_PERSISTENT)
 #define SWIG_STRING_CONSTANT(N, V) REGISTER_STRING_CONSTANT(#N, (char*)V, CONST_CS | CONST_PERSISTENT)
