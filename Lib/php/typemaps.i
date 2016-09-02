@@ -27,7 +27,7 @@
 %define BOOL_TYPEMAP(TYPE)
 %typemap(in) TYPE *INPUT(TYPE temp), TYPE &INPUT(TYPE temp)
 %{
-  convert_to_boolean_ex(&$input);
+  convert_to_boolean(&$input);
   temp = (Z_TYPE($input) == IS_TRUE);
   $1 = &temp;
 %}
@@ -41,7 +41,7 @@
 }
 %typemap(in) TYPE *REFERENCE (TYPE lvalue), TYPE &REFERENCE (TYPE lvalue)
 %{
-  convert_to_boolean_ex($input);
+  convert_to_boolean($input);
   lvalue = (Z_TYPE_P($input) == IS_TRUE);
   $1 = &lvalue;
 %}

@@ -98,7 +98,7 @@
 %typemap(varin) bool
 {
   zval *z_var = zend_hash_str_find(&EG(symbol_table), "$1", sizeof("$1") - 1);
-  convert_to_boolean_ex(z_var);
+  convert_to_boolean(z_var);
   $1 = (Z_TYPE_P(z_var) == IS_TRUE);
 }
 
