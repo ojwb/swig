@@ -84,8 +84,8 @@ SWIG_SetPointerZval(zval *z, void *ptr, swig_type_info *type, int newobject) {
       zend_class_entry *ce = NULL;
       const char *type_name = type->name+3; /* +3 so: _p_Foo -> Foo */
       size_t type_name_len;
-      int result;
       const char * p;
+      HashTable ht;
 
       /* Namespace__Foo -> Foo */
       /* FIXME: ugly and goes wrong for classes with __ in their names. */
@@ -100,21 +100,20 @@ SWIG_SetPointerZval(zval *z, void *ptr, swig_type_info *type, int newobject) {
         memcpy(classname->val, SWIG_PREFIX, SWIG_PREFIX_LEN);
         memcpy(classname->val + SWIG_PREFIX_LEN, type_name, type_name_len);
         ce = zend_lookup_class(classname);
-	zend_string_release(classname);
+        zend_string_release(classname);
       } else {
         zend_string * classname = zend_string_init(type_name, type_name_len, 0);
         ce = zend_lookup_class(classname);
-	zend_string_release(classname);
+        zend_string_release(classname);
       }
       if (ce == NULL) {
         /* class does not exist */
-        object_init(z);
-      } else {
-        object_init_ex(z, ce);
+        ce = zend_standard_class_def;
       }
-      ZVAL_MAKE_REF(z);
 
-      zend_hash_str_update(HASH_OF(z), "_cPtr", sizeof("_cPtr") - 1, &resource);
+      zend_hash_init(&ht, 1, NULL, NULL, 0);
+      zend_hash_str_update(&ht, "_cPtr", sizeof("_cPtr") - 1, &resource);
+      object_and_properties_init(z, ce, &ht);
     }
     return;
   }
@@ -191,15 +190,18 @@ SWIG_ConvertPtr(zval *z, void **ptr, swig_type_info *ty, int flags) {
 
   switch (Z_TYPE_P(z)) {
     case IS_OBJECT: {
-      zval * _cPtr = zend_hash_str_find(HASH_OF(z), "_cPtr", sizeof("_cPtr") - 1);
-      if (_cPtr) {
-	if (Z_TYPE_P(_cPtr) == IS_INDIRECT) {
-	  _cPtr = Z_INDIRECT_P(_cPtr);
-	}
-	if (Z_TYPE_P(_cPtr) == IS_RESOURCE) {
-	  *ptr = SWIG_ConvertResourcePtr(_cPtr, ty, flags);
-	  return (*ptr == NULL ? -1 : 0);
-	}
+      HashTable * ht = Z_OBJ_HT_P(z)->get_properties(z);
+      if (ht) {
+        zval * _cPtr = zend_hash_str_find(ht, "_cPtr", sizeof("_cPtr") - 1);
+        if (_cPtr) {
+          if (Z_TYPE_P(_cPtr) == IS_INDIRECT) {
+            _cPtr = Z_INDIRECT_P(_cPtr);
+          }
+          if (Z_TYPE_P(_cPtr) == IS_RESOURCE) {
+            *ptr = SWIG_ConvertResourcePtr(_cPtr, ty, flags);
+            return (*ptr == NULL ? -1 : 0);
+          }
+        }
       }
       break;
     }
