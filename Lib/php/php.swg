@@ -71,72 +71,72 @@
 // char array can be in/out, though the passed string may not be big enough...
 // so we have to size it
 %typemap(in) char[ANY]
-{
+%{
    convert_to_string(&$input);
    $1 = ($1_ltype) Z_STRVAL($input);
-}
+%}
 
-%typemap(in) (char *STRING, int LENGTH), (char *STRING, size_t LENGTH) {
+%typemap(in) (char *STRING, int LENGTH), (char *STRING, size_t LENGTH) %{
    convert_to_string(&$input);
    $1 = ($1_ltype) Z_STRVAL($input);
    $2 = ($2_ltype) Z_STRLEN($input);
-}
+%}
 
 /* Object passed by value. Convert to a pointer */
 %typemap(in) SWIGTYPE ($&1_ltype tmp)
-{
+%{
 	if (SWIG_ConvertPtr(&$input, (void **) &tmp, $&1_descriptor, 0) < 0 || tmp == NULL) {
           SWIG_PHP_Error(E_ERROR, "Type error in argument $argnum of $symname. Expected $&1_descriptor");
 	}
 	$1 = *tmp;
-}
+%}
 
 %typemap(directorout) SWIGTYPE ($&1_ltype tmp)
-{
+%{
 	/* If exit was via exception, PHP NULL is returned so skip the conversion. */
 	if (!EG(exception)) {
 	  if (SWIG_ConvertPtr($input, (void **) &tmp, $&1_descriptor, 0) < 0 || tmp == NULL)
 	    SWIG_PHP_Error(E_ERROR, "Type error in argument $argnum of $symname. Expected $&1_descriptor");
 	  $result = *tmp;
 	}
-}
+%}
 
 %typemap(in) SWIGTYPE *,
 	     SWIGTYPE []
-{
+%{
 	if (SWIG_ConvertPtr(&$input, (void **) &$1, $1_descriptor, 0) < 0) {
             SWIG_PHP_Error(E_ERROR, "Type error in argument $argnum of $symname. Expected $1_descriptor");
 	}
-}
+%}
 
 %typemap(in) SWIGTYPE &
-{
+%{
 	if (SWIG_ConvertPtr(&$input, (void **) &$1, $1_descriptor, 0) < 0 || $1 == NULL) {
 	    SWIG_PHP_Error(E_ERROR, "Type error in argument $argnum of $symname. Expected $1_descriptor");
 	}
-}
+%}
 
 %typemap(in) SWIGTYPE &&
-{
+%{
 	if (SWIG_ConvertPtr(&$input, (void **) &$1, $1_descriptor, 0) < 0 || $1 == NULL) {
 	    SWIG_PHP_Error(E_ERROR, "Type error in argument $argnum of $symname. Expected $1_descriptor");
 	}
-}
+%}
 
 %typemap(in) SWIGTYPE *const& ($*ltype temp)
-{
+%{
 	if (SWIG_ConvertPtr(&$input, (void **) &temp, $*1_descriptor, 0) < 0) {
             SWIG_PHP_Error(E_ERROR, "Type error in argument $argnum of $symname. Expected $*1_descriptor");
 	}
 	$1 = ($1_ltype)&temp;
-}
+%}
 
 %typemap(in) SWIGTYPE *DISOWN
-{
+%{
   if (SWIG_ConvertPtr(&$input, (void **) &$1, $1_descriptor, SWIG_POINTER_DISOWN ) < 0) {
     SWIG_PHP_Error(E_ERROR, "Type error in argument $argnum of $symname. Expected $&1_descriptor");
   }
-}
+%}
 
 %typemap(argout) SWIGTYPE *,
                  SWIGTYPE [],
@@ -144,14 +144,14 @@
                  SWIGTYPE &&;
 
 %typemap(in) void *
-{
+%{
 	if (SWIG_ConvertPtr(&$input, (void **) &$1, 0, 0) < 0) {
 	  /* Allow NULL from php for void* */
 	  if (Z_ISNULL($input)) $1=0;
 	  else
             SWIG_PHP_Error(E_ERROR, "Type error in argument $argnum of $symname. Expected $&1_descriptor");
 	}
-}
+%}
 
 /* Special case when void* is passed by reference so it can be made to point
    to opaque api structs */
@@ -181,11 +181,11 @@
 }
 %typemap(argout) void **,
                  void *&
-{
+%{
   if (force$argnum) {
     SWIG_SetPointerZval(&$input, (void*) ptr$argnum, $*1_descriptor, 1);
   }
-}
+%}
 
 /* Typemap for output values */
 
@@ -199,14 +199,14 @@
               unsigned char,
               bool,
               size_t
-{
+%{
   RETVAL_LONG($1);
-}
+%}
 
 %typemap(out) enum SWIGTYPE
-{
+%{
   RETVAL_LONG((long)$1);
-}
+%}
 
 %typemap(out) long long
 %{
@@ -239,19 +239,19 @@
               const unsigned char &,
               const bool &,
               const size_t &
-{
+%{
   RETVAL_LONG(*$1);
-}
+%}
 
 %typemap(out) const enum SWIGTYPE &
-{
+%{
   RETVAL_LONG((long)*$1);
-}
+%}
 
 %typemap(out) const enum SWIGTYPE &&
-{
+%{
   RETVAL_LONG((long)*$1);
-}
+%}
 
 %typemap(out) const long long &
 %{
@@ -284,85 +284,85 @@
               unsigned char,
               size_t,
               enum SWIGTYPE
-{
+%{
   ZVAL_LONG($input,$1);
-}
+%}
 
 %typemap(directorin) enum SWIGTYPE
-{
+%{
   ZVAL_LONG($input, (long)$1_name);
-}
+%}
 
 %typemap(directorin) char *, char []
-{
+%{
     if(!$1) {
       ZVAL_NULL($input);
     } else {
       ZVAL_STRING($input, (const char*)$1);
     }
-}
+%}
 
 %typemap(out) bool
-{
+%{
   RETVAL_BOOL(($1) ? 1 : 0);
-}
+%}
 
 %typemap(out) const bool &
-{
+%{
   RETVAL_BOOL((*$1) ? 1 : 0);
-}
+%}
 
 %typemap(directorin) bool
-{
+%{
   ZVAL_BOOL($input, ($1) ? 1 : 0);
-}
+%}
 
 %typemap(out) float,
               double
-{
+%{
   RETVAL_DOUBLE($1);
-}
+%}
 
 %typemap(out) const float &,
               const double &
-{
+%{
   RETVAL_DOUBLE(*$1);
-}
+%}
 
 %typemap(directorin) float,
                      double
-{
+%{
   ZVAL_DOUBLE($input, $1);
-}
+%}
 
 %typemap(out) char
-{
+%{
   RETVAL_STRINGL(&$1, 1);
-}
+%}
 
 %typemap(out) const char &
-{
+%{
   RETVAL_STRINGL(&*$1, 1);
-}
+%}
 
 %typemap(out) char *,
               char []
-{
+%{
   if (!$1) {
     RETVAL_NULL();
   } else {
     RETVAL_STRING((const char *)$1);
   }
-}
+%}
 
 %typemap(out) char *&
-{
+%{
   if (!*$1) {
     RETVAL_NULL();
   } else {
     RETVAL_STRING((const char *)*$1);
   }
-}
+%}
 
 %typemap(out) SWIGTYPE *,
               SWIGTYPE [],
@@ -420,9 +420,9 @@
 #endif
 
 %typemap(directorin) SWIGTYPE
-{
+%{
   SWIG_SetPointerZval($input, SWIG_as_voidptr(new $1_ltype((const $1_ltype &)$1)), $&1_descriptor, 1|2);
-}
+%}
 
 %typemap(out) void "";
 
@@ -503,10 +503,10 @@
                  short,
                  unsigned int,
                  unsigned long,
-                 unsigned short {
+                 unsigned short %{
   zend_throw_exception(NULL, "C++ $1_type exception thrown", $1);
   return;
-}
+%}
 
 %typemap(throws) SWIGTYPE, SWIGTYPE &, SWIGTYPE &&, SWIGTYPE *, SWIGTYPE [], SWIGTYPE [ANY] %{
   (void)$1;
