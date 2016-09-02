@@ -28,12 +28,12 @@ namespace std {
     %}
 
     %typemap(in) string %{
-        convert_to_string_ex(&$input);
+        convert_to_string(&$input);
         $1.assign(Z_STRVAL($input), Z_STRLEN($input));
     %}
 
     %typemap(directorout) string %{
-        convert_to_string_ex($input);
+        convert_to_string($input);
         $result.assign(Z_STRVAL_P($input), Z_STRLEN_P($input));
     %}
 
@@ -57,13 +57,13 @@ namespace std {
     /* These next two handle a function which takes a non-const reference to
      * a std::string and modifies the string. */
     %typemap(in) string & ($*1_ltype temp) %{
-        convert_to_string_ex(&$input);
+        convert_to_string(&$input);
         temp.assign(Z_STRVAL($input), Z_STRLEN($input));
         $1 = &temp;
     %}
 
     %typemap(directorout) string & ($*1_ltype *temp) %{
-        convert_to_string_ex($input);
+        convert_to_string($input);
         temp = new $*1_ltype(Z_STRVAL_P($input), Z_STRLEN_P($input));
         swig_acquire_ownership(temp);
         $result = temp;

@@ -50,7 +50,7 @@
 %enddef
 
 %define CONVERT_CHAR_IN(lvar,t,invar)
-  convert_to_string_ex(&invar);
+  convert_to_string(&invar);
   lvar = (t) Z_STRVAL(invar)[0];
 %enddef
 
@@ -58,7 +58,7 @@
   if (Z_ISNULL(invar)) {
     lvar = (t) 0;
   } else {
-    convert_to_string_ex(&invar);
+    convert_to_string(&invar);
     lvar = (t) Z_STRVAL(invar);
   }
 %enddef

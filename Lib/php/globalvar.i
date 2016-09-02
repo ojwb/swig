@@ -111,7 +111,7 @@
 %typemap(varin) char
 {
   zval *z_var = zend_hash_str_find(&EG(symbol_table), "$1", sizeof("$1") - 1);
-  convert_to_string_ex(z_var);
+  convert_to_string(z_var);
   if ($1 != Z_STRVAL_P(z_var)[0]) {
     $1 = Z_STRVAL_P(z_var)[0];
   }
@@ -121,7 +121,7 @@
 {
   zval *z_var = zend_hash_str_find(&EG(symbol_table), "$1", sizeof("$1") - 1);
   char *s1;
-  convert_to_string_ex(z_var);
+  convert_to_string(z_var);
   s1 = Z_STRVAL_P(z_var);
   if ((s1 == NULL) || ($1 == NULL) || strcmp(s1, $1)) {
     if (s1)

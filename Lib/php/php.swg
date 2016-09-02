@@ -72,12 +72,12 @@
 // so we have to size it
 %typemap(in) char[ANY]
 {
-   convert_to_string_ex(&$input);
+   convert_to_string(&$input);
    $1 = ($1_ltype) Z_STRVAL($input);
 }
 
 %typemap(in) (char *STRING, int LENGTH), (char *STRING, size_t LENGTH) {
-   convert_to_string_ex(&$input);
+   convert_to_string(&$input);
    $1 = ($1_ltype) Z_STRVAL($input);
    $2 = ($2_ltype) Z_STRLEN($input);
 }

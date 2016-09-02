@@ -254,7 +254,7 @@ INT_TYPEMAP(unsigned long long);
 
 %typemap(in) char INPUT[ANY] ( char temp[$1_dim0] )
 %{
-  convert_to_string_ex(&$input);
+  convert_to_string(&$input);
   strncpy(temp, Z_STRVAL($input), $1_dim0);
   $1 = temp;
 %}
