@@ -389,11 +389,7 @@
 {
   void * p = emalloc(sizeof($1));
   memcpy(p, &$1, sizeof($1));
-  zval resource;
-  ZVAL_RES(&resource, zend_register_resource(p, swig_member_ptr));
-  // FIXME: resource is never used now?!
-
-  SWIG_SetPointerZval(return_value, (void *)&$1, $1_descriptor, $owner);
+  RETVAL_RES(zend_register_resource(p, swig_member_ptr));
 }
 
 %typemap(in, fragment="swig_php_init_member_ptr") SWIGTYPE (CLASS::*)
