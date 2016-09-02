@@ -75,11 +75,21 @@
 %}
 %typemap(directorout) TYPE
 %{
-  CONVERT_IN($result, $1_ltype, *$input);
+  if (!EG(exception)) {
+    CONVERT_IN($result, $1_ltype, *$input);
+  } else {
+    typedef $1_ltype swig_result_typedef;
+    $result = swig_result_typedef();
+  }
 %}
 %typemap(directorout) const TYPE & ($*1_ltype temp)
 %{
-  CONVERT_IN(temp, $*1_ltype, *$input);
+  if (!EG(exception)) {
+    CONVERT_IN(temp, $*1_ltype, *$input);
+  } else {
+    typedef $*1_ltype swig_result_typedef;
+    temp = swig_result_typedef();
+  }
   $result = &temp;
 %}
 %enddef
