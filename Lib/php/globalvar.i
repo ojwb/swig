@@ -99,9 +99,7 @@
 {
   zval *z_var = zend_hash_str_find(&EG(symbol_table), "$1", sizeof("$1") - 1);
   convert_to_boolean_ex(z_var);
-  if ($1 != ($1_ltype)(z_var->value.lval)) {
-    $1 = Z_LVAL_P(z_var);
-  }
+  $1 = (Z_TYPE_P(z_var) == IS_TRUE);
 }
 
 %typemap(varin) double,float

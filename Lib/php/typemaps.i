@@ -28,7 +28,7 @@
 %typemap(in) TYPE *INPUT(TYPE temp), TYPE &INPUT(TYPE temp)
 %{
   convert_to_boolean_ex(&$input);
-  temp = Z_LVAL($input) ? true : false;
+  temp = (Z_TYPE($input) == IS_TRUE);
   $1 = &temp;
 %}
 %typemap(argout) TYPE *INPUT, TYPE &INPUT "";
@@ -42,7 +42,7 @@
 %typemap(in) TYPE *REFERENCE (TYPE lvalue), TYPE &REFERENCE (TYPE lvalue)
 %{
   convert_to_boolean_ex($input);
-  lvalue = (*$input)->value.lval ? true : false;
+  lvalue = (Z_TYPE_P($input) == IS_TRUE);
   $1 = &lvalue;
 %}
 %typemap(argout) TYPE *REFERENCE, TYPE &REFERENCE
