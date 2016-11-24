@@ -1064,7 +1064,7 @@ int R::OutputMemberReferenceMethod(String *className, int isSet,
   
   if (!isSet && varaccessor > 0) {
     Printf(f->code, "%svaccessors = c(", tab8);
-    int vcount = 0;
+    int first = 1;
     for(j = 0; j < numMems; j+=3) {
       String *item = Getitem(el, j);
       String *dup = Getitem(el, j + 1);
@@ -1072,8 +1072,8 @@ int R::OutputMemberReferenceMethod(String *className, int isSet,
       ptr = &ptr[Len(dup) - 3];
       
       if (!strcmp(ptr, "get")) {
-	vcount++;
-	Printf(f->code, "'%s'%s", item, vcount < varaccessor ? ", " : "");
+	Printf(f->code, "%s'%s'", first ? "" : ", ", item);
+	first = 0;
       }
     }
     Printf(f->code, ");\n");
@@ -2095,6 +2095,13 @@ int R::functionWrapper(Node *n) {
       Replaceall(tm, "$source", Swig_cresult_name());	/* deprecated */
       Printf(f->code, "%s\n", tm);
     }
+  }
+
+  /* See if there is any return cleanup code */
+  if ((tm = Swig_typemap_lookup("ret", n, Swig_cresult_name(), 0))) {
+    Replaceall(tm, "$source", Swig_cresult_name());
+    Printf(f->code, "%s\n", tm);
+    Delete(tm);
   }
 
   Printv(f->code, UnProtectWrapupCode, NIL);

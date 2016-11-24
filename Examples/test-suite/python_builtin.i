@@ -2,6 +2,12 @@
 
 %module python_builtin
 
+%{
+#if defined(_MSC_VER)
+  #pragma warning(disable: 4290) // C++ exception specification ignored except to indicate a function is not __declspec(nothrow)
+#endif
+%}
+
 %inline %{
 #ifdef SWIGPYTHON_BUILTIN
 bool is_python_builtin() { return true; }
@@ -135,4 +141,67 @@ void Dealloc2Destroyer(PyObject *v) {
     static int less_than_counts;
   };
   int MyClass::less_than_counts = 0;
+%}
+
+// Test 6 add in container __getitem__ to support basic sequence protocol
+// Tests overloaded functions being used for more than one slot (mp_subscript and sq_item)
+%include <exception.i>
+%include <std_except.i>
+%apply int {Py_ssize_t}
+%typemap(in) PySliceObject * {
+  if (!PySlice_Check($input))
+    SWIG_exception(SWIG_TypeError, "in method '$symname', argument $argnum of type '$type'");
+  $1 = (PySliceObject *)$input;
+}
+%typemap(typecheck,precedence=300) PySliceObject* {
+  $1 = PySlice_Check($input);
+}
+
+%feature("python:slot", "mp_subscript", functype="binaryfunc") SimpleArray::__getitem__(PySliceObject *slice);
+%feature("python:slot", "sq_item", functype="ssizeargfunc") SimpleArray::__getitem__(Py_ssize_t n);
+%feature("python:slot", "sq_length", functype="lenfunc") SimpleArray::__len__;
+%inline %{
+  class SimpleArray {
+    Py_ssize_t size;
+    int numbers[5];
+  public:
+    SimpleArray(Py_ssize_t size) : size(size) {
+      for (Py_ssize_t x = 0; x<size; ++x)
+        numbers[x] = (int)x*10;
+    }
+
+    Py_ssize_t __len__() {
+      return size;
+    }
+
+    int __getitem__(Py_ssize_t n) throw (std::out_of_range) {
+      if (n >= (int)size)
+        throw std::out_of_range("Index too large");
+      return numbers[n];
+    }
+
+    SimpleArray __getitem__(PySliceObject *slice) throw (std::out_of_range, std::invalid_argument) {
+      if (!PySlice_Check(slice))
+        throw std::invalid_argument("Slice object expected");
+      Py_ssize_t i, j, step;
+#if PY_VERSION_HEX >= 0x03020000
+      PySlice_GetIndices((PyObject *)slice, size, &i, &j, &step);
+#else
+      PySlice_GetIndices((PySliceObject *)slice, size, &i, &j, &step);
+#endif
+      if (step != 1)
+        throw std::invalid_argument("Only a step size of 1 is implemented");
+
+      {
+        Py_ssize_t ii = i<0 ? 0 : i>=size ? size-1 : i;
+        Py_ssize_t jj = j<0 ? 0 : j>=size ? size-1 : j;
+        if (ii > jj)
+          throw std::invalid_argument("getitem i should not be larger than j");
+        SimpleArray n(jj-ii);
+        for (Py_ssize_t x = 0; x<size; ++x)
+          n.numbers[x] = numbers[x+ii];
+        return n;
+      }
+    }
+  };
 %}

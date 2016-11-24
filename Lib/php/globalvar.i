@@ -4,8 +4,7 @@
  * Global variables - add the variable to PHP
  * ----------------------------------------------------------------------------- */
 
-%typemap(varinit) char *,
-                  char []
+%typemap(varinit) char *
 {
   zval z_var;
   if ($1) {
@@ -13,6 +12,13 @@
   } else {
     ZVAL_STR(&z_var, ZSTR_EMPTY_ALLOC());
   }
+  zend_hash_str_add(&EG(symbol_table), "$1", sizeof("$1") - 1, &z_var);
+}
+
+%typemap(varinit) char []
+{
+  zval z_var;
+  ZVAL_STRING(&z_var, $1);
   zend_hash_str_add(&EG(symbol_table), "$1", sizeof("$1") - 1, &z_var);
 }
 
@@ -71,12 +77,8 @@
 %typemap(varinit) char [ANY]
 {
   zval z_var;
-  if ($1) {
-    /* varinit char [ANY] */
-    ZVAL_STRINGL(&z_var, $1, $1_dim0);
-  } else {
-    ZVAL_STR(&z_var, ZSTR_EMPTY_ALLOC());
-  }
+  /* varinit char [ANY] */
+  ZVAL_STRINGL(&z_var, $1, $1_dim0);
   zend_hash_str_add(&EG(symbol_table), "$1", sizeof("$1") - 1, &z_var);
 }
 

@@ -47,11 +47,13 @@ static Hash *f_shadow_imports = 0;
 static String *f_shadow_builtin_imports = 0;
 static String *f_shadow_stubs = 0;
 static Hash *builtin_getset = 0;
+static Hash *builtin_closures = 0;
 static Hash *class_members = 0;
 static File *f_builtins = 0;
 static String *builtin_tp_init = 0;
 static String *builtin_methods = 0;
 static String *builtin_default_unref = 0;
+static String *builtin_closures_code = 0;
 
 static String *methods;
 static String *class_name;
@@ -188,7 +190,7 @@ static String *getClosure(String *functype, String *wrapper, int funpack = 0) {
     "unaryfunc", "SWIGPY_UNARYFUNC_CLOSURE",
     "destructor", "SWIGPY_DESTRUCTOR_CLOSURE",
     "inquiry", "SWIGPY_INQUIRY_CLOSURE",
-    "getiterfunc", "SWIGPY_UNARYFUNC_CLOSURE",
+    "getiterfunc", "SWIGPY_GETITERFUNC_CLOSURE",
     "binaryfunc", "SWIGPY_BINARYFUNC_CLOSURE",
     "ternaryfunc", "SWIGPY_TERNARYFUNC_CLOSURE",
     "ternarycallfunc", "SWIGPY_TERNARYCALLFUNC_CLOSURE",
@@ -200,7 +202,7 @@ static String *getClosure(String *functype, String *wrapper, int funpack = 0) {
     "objobjargproc", "SWIGPY_OBJOBJARGPROC_CLOSURE",
     "reprfunc", "SWIGPY_REPRFUNC_CLOSURE",
     "hashfunc", "SWIGPY_HASHFUNC_CLOSURE",
-    "iternextfunc", "SWIGPY_ITERNEXT_CLOSURE",
+    "iternextfunc", "SWIGPY_ITERNEXTFUNC_CLOSURE",
     NULL
   };
 
@@ -208,7 +210,7 @@ static String *getClosure(String *functype, String *wrapper, int funpack = 0) {
     "unaryfunc", "SWIGPY_UNARYFUNC_CLOSURE",
     "destructor", "SWIGPY_DESTRUCTOR_CLOSURE",
     "inquiry", "SWIGPY_INQUIRY_CLOSURE",
-    "getiterfunc", "SWIGPY_UNARYFUNC_CLOSURE",
+    "getiterfunc", "SWIGPY_GETITERFUNC_CLOSURE",
     "ternaryfunc", "SWIGPY_TERNARYFUNC_CLOSURE",
     "ternarycallfunc", "SWIGPY_TERNARYCALLFUNC_CLOSURE",
     "lenfunc", "SWIGPY_LENFUNC_CLOSURE",
@@ -219,7 +221,7 @@ static String *getClosure(String *functype, String *wrapper, int funpack = 0) {
     "objobjargproc", "SWIGPY_OBJOBJARGPROC_CLOSURE",
     "reprfunc", "SWIGPY_REPRFUNC_CLOSURE",
     "hashfunc", "SWIGPY_HASHFUNC_CLOSURE",
-    "iternextfunc", "SWIGPY_ITERNEXT_CLOSURE",
+    "iternextfunc", "SWIGPY_ITERNEXTFUNC_CLOSURE",
     NULL
   };
 
@@ -626,6 +628,8 @@ public:
     f_directors_h = NewString("");
     f_directors = NewString("");
     builtin_getset = NewHash();
+    builtin_closures = NewHash();
+    builtin_closures_code = NewString("");
     class_members = NewHash();
     builtin_methods = NewString("");
     builtin_default_unref = NewString("delete $self;");
@@ -861,12 +865,13 @@ public:
       /* At here, the module may already loaded, so simply import it. */
       Printf(f_shadow, tab4 tab8 "import %s\n", module);
       Printf(f_shadow, tab4 tab8 "return %s\n", module);
-      Printv(f_shadow, tab8 "if fp is not None:\n", NULL);
-      Printv(f_shadow, tab4 tab8 "try:\n", NULL);
-      Printf(f_shadow, tab8 tab8 "_mod = imp.load_module('%s', fp, pathname, description)\n", module);
-      Printv(f_shadow, tab4 tab8, "finally:\n", NULL);
+      Printv(f_shadow, tab8 "try:\n", NULL);
+      /* imp.load_module() handles fp being None. */
+      Printf(f_shadow, tab4 tab8 "_mod = imp.load_module('%s', fp, pathname, description)\n", module);
+      Printv(f_shadow, tab8, "finally:\n", NULL);
+      Printv(f_shadow, tab4 tab8 "if fp is not None:\n", NULL);
       Printv(f_shadow, tab8 tab8, "fp.close()\n", NULL);
-      Printv(f_shadow, tab4 tab8, "return _mod\n", NULL);
+      Printv(f_shadow, tab8, "return _mod\n", NULL);
       Printf(f_shadow, tab4 "%s = swig_import_helper()\n", module);
       Printv(f_shadow, tab4, "del swig_import_helper\n", NULL);
       Printv(f_shadow, "else:\n", NULL);
@@ -3327,12 +3332,15 @@ public:
 	String *func_type = Getattr(n, "feature:python:slot:functype");
 	String *closure_decl = getClosure(func_type, wrapper_name, overname ? 0 : funpack);
 	String *feature_name = NewStringf("feature:python:%s", slot);
-	String *closure_name = Copy(wrapper_name);
+	String *closure_name = 0;
 	if (closure_decl) {
-	  Append(closure_name, "_closure");
-	  if (!Getattr(n, "sym:overloaded") || !Getattr(n, "sym:nextSibling"))
-	    Printf(f_wrappers, "%s /* defines %s */\n\n", closure_decl, closure_name);
+	  closure_name = NewStringf("%s_%s_closure", wrapper_name, func_type);
+	  if (!GetFlag(builtin_closures, closure_name))
+	    Printf(builtin_closures_code, "%s /* defines %s */\n\n", closure_decl, closure_name);
+	  SetFlag(builtin_closures, closure_name);
 	  Delete(closure_decl);
+	} else {
+	  closure_name = Copy(wrapper_name);
 	}
 	if (func_type) {
 	  String *s = NewStringf("(%s) %s", func_type, closure_name);
@@ -3917,8 +3925,14 @@ public:
     String *pmname = SwigType_manglestr(pname);
     String *templ = NewStringf("SwigPyBuiltin_%s", mname);
     int funpack = modernargs && fastunpack;
+    static String *tp_new = NewString("PyType_GenericNew");
 
     Printv(f_init, "  SwigPyBuiltin_SetMetaType(builtin_pytype, metatype);\n", NIL);
+
+    // We can’t statically initialize a structure member with a function defined in another C module
+    // So this is done in the initialization function instead, see https://docs.python.org/2/extending/newtypes.html
+    Printf(f_init, "  builtin_pytype->tp_new = %s;\n", getSlot(n, "feature:python:tp_new", tp_new));
+
     Printv(f_init, "  builtin_base_count = 0;\n", NIL);
     List *baselist = Getattr(n, "bases");
     if (baselist) {
@@ -4056,7 +4070,6 @@ public:
 
     static String *tp_basicsize = NewStringf("sizeof(SwigPyObject)");
     static String *tp_dictoffset_default = NewString("offsetof(SwigPyObject, dict)");
-    static String *tp_new = NewString("PyType_GenericNew");
     static String *tp_hash = NewString("SwigPyObject_hash");
     String *tp_as_number = NewStringf("&%s_type.as_number", templ);
     String *tp_as_sequence = NewStringf("&%s_type.as_sequence", templ);
@@ -4117,7 +4130,7 @@ public:
     printSlot(f, getSlot(n, "feature:python:tp_dictoffset", tp_dictoffset_default), "tp_dictoffset", "Py_ssize_t");
     printSlot(f, getSlot(n, "feature:python:tp_init", tp_init), "tp_init", "initproc");
     printSlot(f, getSlot(n, "feature:python:tp_alloc"), "tp_alloc", "allocfunc");
-    printSlot(f, getSlot(n, "feature:python:tp_new", tp_new), "tp_new", "newfunc");
+    printSlot(f, getSlot(), "tp_new", "newfunc");
     printSlot(f, getSlot(n, "feature:python:tp_free"), "tp_free", "freefunc");
     printSlot(f, getSlot(n, "feature:python:tp_is_gc"), "tp_is_gc", "inquiry");
     printSlot(f, getSlot(n, "feature:python:tp_bases"), "tp_bases", "PyObject *");
@@ -4510,7 +4523,12 @@ public:
       SwigType *realct = Copy(real_classname);
       SwigType_add_pointer(realct);
       SwigType_remember(realct);
-      if (!builtin) {
+      if (builtin) {
+	Printv(f_wrappers, builtin_closures_code, NIL);
+	Delete(builtin_closures_code);
+	builtin_closures_code = NewString("");
+	Clear(builtin_closures);
+      } else {
 	Printv(f_wrappers, "SWIGINTERN PyObject *", class_name, "_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {\n", NIL);
 	Printv(f_wrappers, "  PyObject *obj;\n", NIL);
 	if (modernargs) {
