@@ -73,7 +73,7 @@ SWIG_SetPointerZval(zval *z, void *ptr, swig_type_info *type, int newobject) {
     value->newobject=(newobject & 1);
     if ((newobject & 2) == 0) {
       /* Just register the pointer as a resource. */
-      ZVAL_NEW_RES(z, 0, value, *(int *)(type->clientdata));
+      ZVAL_RES(z, zend_register_resource(value, *(int *)(type->clientdata)));
     } else {
       /*
        * Wrap the resource in an object, the resource will be accessible
@@ -94,7 +94,7 @@ SWIG_SetPointerZval(zval *z, void *ptr, swig_type_info *type, int newobject) {
       }
       type_name_len = strlen(type_name);
 
-      ZVAL_NEW_RES(&resource, 0, value, *(int *)(type->clientdata));
+      ZVAL_RES(&resource, zend_register_resource(value, *(int *)(type->clientdata)));
       if (SWIG_PREFIX_LEN > 0) {
         zend_string * classname = zend_string_alloc(SWIG_PREFIX_LEN + type_name_len, 0);
         memcpy(classname->val, SWIG_PREFIX, SWIG_PREFIX_LEN);

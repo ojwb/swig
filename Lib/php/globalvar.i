@@ -87,7 +87,7 @@
   zval resource;
   void * p = emalloc(sizeof($1));
   memcpy(p, &$1, sizeof($1));
-  ZVAL_NEW_RES(&resource, 0, p, swig_member_ptr);
+  ZVAL_RES(&resource, zend_register_resource(p, swig_member_ptr));
   zend_hash_str_add(&EG(symbol_table), "$1", sizeof("$1") - 1, &resource);
 }
 
@@ -289,6 +289,6 @@ deliberate error cos this code looks bogus to me
   zval resource;
   void * p = emalloc(sizeof($1));
   memcpy(p, &$1, sizeof($1));
-  ZVAL_NEW_RES(&resource, 0, p, swig_member_ptr);
+  ZVAL_RES(&resource, zend_register_resource(p, swig_member_ptr));
   zend_hash_str_add(&EG(symbol_table), "$1", sizeof("$1") - 1, &resource);
 }
