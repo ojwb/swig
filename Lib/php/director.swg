@@ -83,7 +83,7 @@ namespace Swig {
       mutable swig_ownership_map swig_owner;
     public:
       Director(zval *self) {
-        ZVAL_COPY(&swig_self, self);
+        ZVAL_COPY_VALUE(&swig_self, self);
       }
 
       static bool swig_is_overridden_method(const char *cname, const char *lc_fname) {
