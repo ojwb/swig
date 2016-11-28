@@ -85,7 +85,7 @@ SWIG_SetPointerZval(zval *z, void *ptr, swig_type_info *type, int newobject) {
       const char *type_name = type->name+3; /* +3 so: _p_Foo -> Foo */
       size_t type_name_len;
       const char * p;
-      HashTable ht;
+      HashTable * ht;
 
       /* Namespace__Foo -> Foo */
       /* FIXME: ugly and goes wrong for classes with __ in their names. */
@@ -111,9 +111,10 @@ SWIG_SetPointerZval(zval *z, void *ptr, swig_type_info *type, int newobject) {
         ce = zend_standard_class_def;
       }
 
-      zend_hash_init(&ht, 1, NULL, NULL, 0);
-      zend_hash_str_update(&ht, "_cPtr", sizeof("_cPtr") - 1, &resource);
-      object_and_properties_init(z, ce, &ht);
+      ALLOC_HASHTABLE(ht);
+      zend_hash_init(ht, 1, NULL, NULL, 0);
+      zend_hash_str_update(ht, "_cPtr", sizeof("_cPtr") - 1, &resource);
+      object_and_properties_init(z, ce, ht);
     }
     return;
   }
