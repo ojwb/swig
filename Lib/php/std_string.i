@@ -56,12 +56,21 @@ namespace std {
         return;
     %}
 
-    /* These next two handle a function which takes a non-const reference to
-     * a std::string and modifies the string. */
-    %typemap(in) string & ($*1_ltype temp) %{
+    %typemap(in) const string & ($*1_ltype temp) %{
         convert_to_string(&$input);
         temp.assign(Z_STRVAL($input), Z_STRLEN($input));
         $1 = &temp;
+    %}
+
+    /* These next two handle a function which takes a non-const reference to
+     * a std::string and modifies the string. */
+    %typemap(in,byref=1) string & ($*1_ltype temp) %{
+        {
+          zval * p = Z_ISREF($input) ? Z_REFVAL($input) : &$input;
+          convert_to_string(p);
+          temp.assign(Z_STRVAL_P(p), Z_STRLEN_P(p));
+          $1 = &temp;
+        }
     %}
 
     %typemap(directorout) string & ($*1_ltype *temp) %{
@@ -74,7 +83,9 @@ namespace std {
     %}
 
     %typemap(argout) string & %{
-	ZVAL_STRINGL(&$input, $1->data(), $1->size());
+      if (Z_ISREF($input)) {
+        ZVAL_STRINGL(Z_REFVAL($input), $1->data(), $1->size());
+      }
     %}
 
     /* SWIG will apply the non-const typemap above to const string& without

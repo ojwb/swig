@@ -1037,6 +1037,7 @@ public:
       bool handle_as_overload = false;
       String **arg_names;
       String **arg_values;
+      unsigned char * byref;
       // Method or static method or plain function.
       const char *methodname = 0;
       String *output = s_oowrappers;
@@ -1177,7 +1178,8 @@ public:
       }
 
       arg_values = (String **) malloc(max_num_of_arguments * sizeof(String *));
-      if (!arg_values) {
+      byref = (unsigned char *) malloc(max_num_of_arguments);
+      if (!arg_values || !byref) {
 	/* FIXME: How should this be handled?  The rest of SWIG just seems
 	 * to not bother checking for malloc failing! */
 	fprintf(stderr, "Malloc failed!\n");
@@ -1185,6 +1187,7 @@ public:
       }
       for (i = 0; i < max_num_of_arguments; ++i) {
 	arg_values[i] = NULL;
+	byref[i] = false;
       }
 
       Node *o;
@@ -1204,6 +1207,7 @@ public:
 	    continue;
 	  }
 	  assert(0 <= argno && argno < max_num_of_arguments);
+	  byref[argno] = GetFlag(p, "tmap:in:byref");
 	  String *&pname = arg_names[argno];
 	  const char *pname_cstr = GetChar(p, "name");
 	  // Just get rid of the C++ namespace part for now.
@@ -1452,6 +1456,7 @@ public:
 	    Printf(args, ",");
 	  if (i || wrapperType == memberfn)
 	    Printf(invoke, ",");
+	  if (byref[i]) Printf(args, "&");
 	  String *value = arg_values[i];
 	  if (value) {
 	    const char *v = Char(value);
