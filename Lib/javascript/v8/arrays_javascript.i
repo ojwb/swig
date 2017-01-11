@@ -24,24 +24,24 @@
 %fragment("SWIG_JSCGetIntProperty",    "header", fragment=SWIG_AsVal_frag(int)) {}
 %fragment("SWIG_JSCGetNumberProperty", "header", fragment=SWIG_AsVal_frag(double)) {}
 
-%typemap(in, fragment="SWIG_JSCGetIntProperty") int[], int[ANY]
-    (int length = 0, v8::Local<v8::Array> array, v8::Local<v8::Value> jsvalue, int i = 0, int res = 0, $*1_ltype temp) {
+%typemap(in, fragment="SWIG_JSCGetIntProperty") int[], int[ANY] {
   if ($input->IsArray())
   {
     // Convert into Array
-    array = v8::Local<v8::Array>::Cast($input);
-
-    length = $1_dim0;
+    int length = $1_dim0;
+    v8::Local<v8::Array> array = v8::Local<v8::Array>::Cast($input);
+    int i;
 
     $1  = ($*1_ltype *)malloc(sizeof($*1_ltype) * length);
 
     // Get each element from array
     for (i = 0; i < length; i++)
     {
-      jsvalue = array->Get(i);
+      v8::Local<v8::Value> jsvalue = array->Get(i);
 
       // Get primitive value from JSObject
-      res = SWIG_AsVal(int)(jsvalue, &temp);
+      $*1_ltype temp;
+      int res = SWIG_AsVal(int)(jsvalue, &temp);
       if (!SWIG_IsOK(res))
       {
         SWIG_exception_fail(SWIG_ERROR, "Failed to convert $input to double");
@@ -60,10 +60,10 @@
     free($1);
 }
 
-%typemap(out, fragment=SWIG_From_frag(int)) int[], int[ANY] (int length = 0, int i = 0)
-{
-  length = $1_dim0;
+%typemap(out, fragment=SWIG_From_frag(int)) int[], int[ANY] {
+  int length = $1_dim0;
   v8::Local<v8::Array> array = v8::Array::New(length);
+  int i;
 
   for (i = 0; i < length; i++)
   {
@@ -74,24 +74,24 @@
   $result = array;
 }
 
-%typemap(in, fragment="SWIG_JSCGetNumberProperty") double[], double[ANY]
-    (int length = 0, v8::Local<v8::Array> array, v8::Local<v8::Value> jsvalue, int i = 0, int res = 0, $*1_ltype temp) {
+%typemap(in, fragment="SWIG_JSCGetNumberProperty") double[], double[ANY] {
   if ($input->IsArray())
   {
     // Convert into Array
-    array = v8::Local<v8::Array>::Cast($input);
-
-    length = $1_dim0;
+    int length = $1_dim0;
+    v8::Local<v8::Array> array = v8::Local<v8::Array>::Cast($input);
+    int i;
 
     $1  = ($*1_ltype *)malloc(sizeof($*1_ltype) * length);
 
     // Get each element from array
     for (i = 0; i < length; i++)
     {
-      jsvalue = array->Get(i);
+      v8::Local<v8::Value> jsvalue = array->Get(i);
 
       // Get primitive value from JSObject
-      res = SWIG_AsVal(double)(jsvalue, &temp);
+      $*1_ltype temp;
+      int res = SWIG_AsVal(double)(jsvalue, &temp);
       if (!SWIG_IsOK(res))
       {
         SWIG_exception_fail(SWIG_ERROR, "Failed to convert $input to double");
@@ -110,16 +110,15 @@
     free($1);
 }
 
-%typemap(out, fragment=SWIG_From_frag(double)) double[], double[ANY] (int length = 0, int i = 0)
-{
-  length = $1_dim0;
+%typemap(out, fragment=SWIG_From_frag(double)) double[], double[ANY] {
+  int length = $1_dim0;
   v8::Local<v8::Array> array = v8::Array::New(length);
+  int i;
 
   for (i = 0; i < length; i++)
   {
     array->Set(i, SWIG_From(double)($1[i]));
   }
-
 
   $result = array;
 }
