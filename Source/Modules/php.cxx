@@ -2749,13 +2749,12 @@ done:
     Append(class_types, class_type);
     Append(class_need_free, "0");
 
-    Printf(s_oinit, "\nzend_class_entry %s_internal_ce;\n", class_name);
+    Printf(s_oinit, "  {\n");
+    Printf(s_oinit, "    zend_class_entry tmp_ce;\n");
+    Printf(s_oinit, "    /* PHP doesn't seem to initialise all the members it needs to. */\n");
+    Printf(s_oinit, "    memset(&tmp_ce, 0, sizeof(tmp_ce));\n");
     
-    // namespace code to introduce namespaces into wrapper classes.
-    //if (nameSpace != NULL)
-      //Printf(s_oinit, "INIT_CLASS_ENTRY(%s_internal_ce, \"%s\\\\%s\", class_%s_functions);\n", class_name, nameSpace ,class_name, class_name);
-    //else
-    Printf(s_oinit, "INIT_CLASS_ENTRY(%s_internal_ce, \"%s\", class_%s_functions);\n", class_name, class_name, class_name);
+    Printf(s_oinit, "    INIT_CLASS_ENTRY(tmp_ce, \"%s\", class_%s_functions);\n", class_name, class_name);
 
     if (shadow) {
       char *rename = GetChar(n, "sym:name");
@@ -2807,10 +2806,10 @@ done:
     }
 
     if (baseClassExtend && (exceptionClassFlag || is_class_wrapped(baseClassExtend))) {
-      Printf(s_oinit, "%s_ce = zend_register_internal_class_ex(&%s_internal_ce, %s_ce);\n", class_name , class_name, baseClassExtend);
+      Printf(s_oinit, "    %s_ce = zend_register_internal_class_ex(&tmp_ce, %s_ce);\n", class_name, baseClassExtend);
     }
     else {
-      Printf(s_oinit, "%s_ce = zend_register_internal_class(&%s_internal_ce);\n", class_name , class_name);
+      Printf(s_oinit, "    %s_ce = zend_register_internal_class(&tmp_ce);\n", class_name);
     }
 
     {
@@ -2838,9 +2837,10 @@ done:
       }
     }
 
-    Printf(s_oinit, "%s_ce->create_object = %s_object_new;\n", class_name, class_name);
-    Printf(s_oinit, "memcpy(&%s_object_handlers,zend_get_std_object_handlers(), sizeof(zend_object_handlers));\n", class_name);
-    Printf(s_oinit, "%s_object_handlers.clone_obj = NULL;\n\n", class_name);
+    Printf(s_oinit, "    %s_ce->create_object = %s_object_new;\n", class_name, class_name);
+    Printf(s_oinit, "    %s_object_handlers = *zend_get_std_object_handlers();\n", class_name);
+    Printf(s_oinit, "    %s_object_handlers.clone_obj = NULL;\n", class_name);
+    Printf(s_oinit, "  }\n");
 
     classnode = n;
     Language::classHandler(n);
