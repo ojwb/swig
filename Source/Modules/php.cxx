@@ -1006,6 +1006,15 @@ public:
     else
       modes = NewString("ZEND_ACC_PUBLIC");
 
+    if (constructor) {
+      if (Cmp(class_name, Getattr(n, "constructorHandler:sym:name")) != 0) {
+	// Renamed constructor - turn into static factory method.
+	Delete(wname);
+	wname = Copy(Getattr(n, "constructorHandler:sym:name"));
+	// FIXME: sort out static-ness
+      }
+    }
+
     create_command(class_name, wname, n, true, modes);
 
     if (!class_name)
