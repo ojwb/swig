@@ -1343,10 +1343,7 @@ public:
       }
     }
     else if (wrapperType == staticmembervar) {
-      // Shape::nshapes -> nshapes
-      char *ptr = Char(strrchr(GetChar(n, "name"),':'));
-      ptr+= 1;
-      wname = (String*) ptr;
+      wname = Getattr(n, "staticmembervariableHandler:sym:name");
 
       /* We get called twice for getter and setter methods. But to maintain
          compatibility, Shape::nshapes() is being used for both setter and 
@@ -1362,13 +1359,7 @@ public:
       }
     }
     else if (wrapperType == staticmemberfn) {
-      if (Char(Strchr(name, ':'))) {
-        char *ptr = Char(iname);
-        ptr+= strlen(Char(iname)) - strlen(strrchr(GetChar(n, "name"),':') + 1);
-        wname = (String*) ptr;
-      }
-      else
-        wname = iname;
+      wname = Getattr(n, "staticmemberfunctionHandler:sym:name");
     }
     else {
       if (class_name) {
