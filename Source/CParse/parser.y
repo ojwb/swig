@@ -3865,7 +3865,7 @@ cpp_class_decl: storage_class cpptype idcolon class_virt_specifier_opt inherit L
 		     }
 		     p = nextSibling(p);
 		   }
-	Printf(stderr, "storage of something is [%s]\n", $1);
+	Printf(stderr, "storage of class %s/typedef %s is [%s]\n", cscope, scpname, $1);
 		   if ($10 && Cmp($1,"typedef") == 0)
 		     add_typedef_name($$, $10, $3, cscope, scpname);
 		   Delete(scpname);
@@ -5159,6 +5159,7 @@ storage_class_list: storage_class_raw { $$ = $1; }
 		  }
 		  $$ = $1 | $2;
 	       }
+	       ;
 
 storage_class_raw  : EXTERN { $$ = SWIG_STORAGE_CLASS_EXTERN; }
 	       | extern_string { $$ = $1; }
