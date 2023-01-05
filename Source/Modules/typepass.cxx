@@ -168,6 +168,7 @@ class TypePass:private Dispatcher {
 		if (checkAttribute(bcls, "storage", "typedef")) {
 		  SwigType *decl = Getattr(bcls, "decl");
 		  if (!decl || !(Len(decl))) {
+		    if (Equal(sname, Getattr(bcls, "type"))) break;
 		    sname = Getattr(bcls, "type");
 		    st = Getattr(bcls, "sym:symtab");
 		    if (SwigType_istemplate(sname)) {
