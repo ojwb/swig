@@ -1722,7 +1722,7 @@ static String *add_qualifier_to_declarator(SwigType *type, SwigType *qualifier) 
 %type <id>       identifier;
 %type <dtype>    initializer cpp_const exception_specification cv_ref_qualifier qualifiers_exception_specification;
 %type <str>      storage_class;
-%type <intvalue> extern_string storage_class_raw storage_class_list;
+%type <intvalue> storage_class_raw storage_class_list;
 %type <pl>       parms rawparms varargs_parms ;
 %type <pl>       templateparameterstail;
 %type <p>        parm_no_dox parm valparm rawvalparms valparms valptail ;
@@ -5098,18 +5098,6 @@ anon_bitfield_type : primitive_type { $$ = $1;
 /* ====================================================================== 
  *                       PRIMITIVES
  * ====================================================================== */
-extern_string :  EXTERN string {
-                   if (Strcmp($2,"C") == 0) {
-		     $$ = SWIG_STORAGE_CLASS_EXTERNC;
-                   } else if (Strcmp($2,"C++") == 0) {
-		     $$ = SWIG_STORAGE_CLASS_EXTERN;
-		   } else {
-		     Swig_warning(WARN_PARSE_UNDEFINED_EXTERN,cparse_file, cparse_line,"Unrecognized extern type \"%s\".\n", $2);
-		     $$ = 0;
-		   }
-               }
-	       ;
-
 storage_class  : storage_class_list {
 	         String *r = NewStringEmpty();
 		 /* Check for invalid combinations. */
@@ -5162,7 +5150,16 @@ storage_class_list: storage_class_raw { $$ = $1; }
 	       ;
 
 storage_class_raw  : EXTERN { $$ = SWIG_STORAGE_CLASS_EXTERN; }
-	       | extern_string { $$ = $1; }
+	       | EXTERN string {
+                   if (Strcmp($2,"C") == 0) {
+		     $$ = SWIG_STORAGE_CLASS_EXTERNC;
+                   } else if (Strcmp($2,"C++") == 0) {
+		     $$ = SWIG_STORAGE_CLASS_EXTERN;
+		   } else {
+		     Swig_warning(WARN_PARSE_UNDEFINED_EXTERN,cparse_file, cparse_line,"Unrecognized extern type \"%s\".\n", $2);
+		     $$ = 0;
+		   }
+               }
                | STATIC { $$ = SWIG_STORAGE_CLASS_STATIC; }
                | TYPEDEF { $$ = SWIG_STORAGE_CLASS_TYPEDEF; }
                | VIRTUAL { $$ = SWIG_STORAGE_CLASS_VIRTUAL; }
