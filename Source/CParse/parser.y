@@ -234,15 +234,15 @@ static int cplus_mode  = 0;
 /* storage classes */
 
 #define SWIG_STORAGE_CLASS_EXTERNC	0x0001
-#define SWIG_STORAGE_CLASS_EXTERNCPP	0x0200
-#define SWIG_STORAGE_CLASS_EXTERN	0x0002
-#define SWIG_STORAGE_CLASS_STATIC	0x0004
-#define SWIG_STORAGE_CLASS_TYPEDEF	0x0008
-#define SWIG_STORAGE_CLASS_VIRTUAL	0x0010
-#define SWIG_STORAGE_CLASS_FRIEND	0x0020
-#define SWIG_STORAGE_CLASS_EXPLICIT	0x0040
-#define SWIG_STORAGE_CLASS_CONSTEXPR	0x0080
-#define SWIG_STORAGE_CLASS_THREAD_LOCAL	0x0100
+#define SWIG_STORAGE_CLASS_EXTERNCPP	0x0002
+#define SWIG_STORAGE_CLASS_EXTERN	0x0004
+#define SWIG_STORAGE_CLASS_STATIC	0x0008
+#define SWIG_STORAGE_CLASS_TYPEDEF	0x0010
+#define SWIG_STORAGE_CLASS_VIRTUAL	0x0020
+#define SWIG_STORAGE_CLASS_FRIEND	0x0040
+#define SWIG_STORAGE_CLASS_EXPLICIT	0x0080
+#define SWIG_STORAGE_CLASS_CONSTEXPR	0x0100
+#define SWIG_STORAGE_CLASS_THREAD_LOCAL	0x0200
 /* Used to check for invalid combination */
 #define SWIG_STORAGE_CLASS_EXTERN_STATIC (SWIG_STORAGE_CLASS_EXTERN|SWIG_STORAGE_CLASS_STATIC)
 
@@ -5105,8 +5105,8 @@ storage_class  : storage_class_list {
 		 if (($1 & SWIG_STORAGE_CLASS_EXTERN_STATIC) == SWIG_STORAGE_CLASS_EXTERN_STATIC) {
 		   Swig_error(cparse_file, cparse_line, "Declaration can't be both static and extern.");
 		 }
-		 // FIXME: static thread_local ?
-		 // & with SWIG_STORAGE_CLASS_EXTERNC|SWIG_STORAGE_CLASS_EXTERN|SWIG_STORAGE_CLASS_EXTERNCPP|SWIG_STORAGE_EXTERN
+		 // FIXME:
+		 // & with SWIG_STORAGE_CLASS_EXTERNC|SWIG_STORAGE_CLASS_EXTERN|SWIG_STORAGE_CLASS_EXTERNCPP
 		 // then reject if not a power of 2?
 		 if ($1 & SWIG_STORAGE_CLASS_TYPEDEF) {
 		   Append(r, "typedef ");
@@ -5132,7 +5132,7 @@ storage_class  : storage_class_list {
 		   Delete(r);
 		   $$ = 0;
 		 } else {
-		   Delitem(r, DOH_END);
+		   Chop(r);
 		   $$ = r;
 		   Printf(stderr, "storage_class is [%s]\n", r);
 		 }
@@ -5154,7 +5154,7 @@ storage_class_raw  : EXTERN { $$ = SWIG_STORAGE_CLASS_EXTERN; }
                    if (Strcmp($2,"C") == 0) {
 		     $$ = SWIG_STORAGE_CLASS_EXTERNC;
                    } else if (Strcmp($2,"C++") == 0) {
-		     $$ = SWIG_STORAGE_CLASS_EXTERN;
+		     $$ = SWIG_STORAGE_CLASS_EXTERNCPP;
 		   } else {
 		     Swig_warning(WARN_PARSE_UNDEFINED_EXTERN,cparse_file, cparse_line,"Unrecognized extern type \"%s\".\n", $2);
 		     $$ = 0;
