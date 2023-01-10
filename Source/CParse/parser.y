@@ -507,7 +507,6 @@ static void add_symbols(Node *n) {
       String *makename = Getattr(n,"parser:makename");
       if (iscdecl) {	
 	String *storage = Getattr(n, "storage");
-//	Printf(stderr, "storage of %s is [%s]\n", name, storage);
 	if (Cmp(storage,"typedef") == 0) {
 	  Setattr(n,"kind","typedef");
 	} else {
@@ -668,7 +667,6 @@ static void add_symbols(Node *n) {
 	  Delete(e);
           Delete(en);
           Delete(ec);
-	  //FIXME: Swig_print_node(n);
         }
       }
     }
@@ -1189,11 +1187,10 @@ Printf(stdout, "comparing current: [%s] found: [%s]\n", current_scopename, found
 }
  
 /* look for simple typedef name in typedef list */
-static String *try_to_find_a_name_for_unnamed_structure(const char *storage, Node *decls) {
+static String *try_to_find_a_name_for_unnamed_structure(const String *storage, Node *decls) {
   String *name = 0;
   Node *n = decls;
-//  Printf(stderr, "storage of unnamed structure is [%s]\n", storage);
-  if (storage && (strcmp(storage, "typedef") == 0)) {
+  if (storage && (Cmp(storage, "typedef") == 0)) {
     for (; n; n = nextSibling(n)) {
       if (!Len(Getattr(n, "decl"))) {
 	name = Copy(Getattr(n, "name"));
@@ -1223,7 +1220,7 @@ static void update_nested_classes(Node *n)
  * Create the nested class/struct/union as a forward declaration.
  * ----------------------------------------------------------------------------- */
 
-static Node *nested_forward_declaration(const char *storage, const String *kind, String *sname, String *name, Node *cpp_opt_declarators) {
+static Node *nested_forward_declaration(const String *storage, const String *kind, String *sname, String *name, Node *cpp_opt_declarators) {
   Node *nn = 0;
 
   if (sname) {
@@ -1240,11 +1237,10 @@ static Node *nested_forward_declaration(const char *storage, const String *kind,
   /* Add any variable instances. Also add in any further typedefs of the nested type.
      Note that anonymous typedefs (eg typedef struct {...} a, b;) are treated as class forward declarations */
   if (cpp_opt_declarators) {
-//	Printf(stderr, "storage (2) of %s is [%s]\n", name, storage);
-    int storage_typedef = (storage && (strcmp(storage, "typedef") == 0));
+    int storage_typedef = (storage && (Cmp(storage, "typedef") == 0));
     int variable_of_anonymous_type = !sname && !storage_typedef;
     if (!variable_of_anonymous_type) {
-      int anonymous_typedef = !sname && (storage && (strcmp(storage, "typedef") == 0));
+      int anonymous_typedef = !sname && storage_typedef;
       Node *n = cpp_opt_declarators;
       SwigType *type = name;
       while (n) {
@@ -2415,7 +2411,7 @@ native_directive : NATIVE LPAREN identifier RPAREN storage_class identifier SEMI
                  $$ = new_node("native");
 		 Setattr($$,"name",$3);
 		 Setattr($$,"wrap:name",$6);
-//		 Delete($5);
+		 Delete($5);
 	         add_symbols($$);
 	       }
                | NATIVE LPAREN identifier RPAREN storage_class type declarator SEMI {
@@ -2433,7 +2429,7 @@ native_directive : NATIVE LPAREN identifier RPAREN storage_class identifier SEMI
 		     Setattr($$,"parms",$7.parms);
 		     Setattr($$,"decl",$7.type);
 		 }
-//		 Delete($5);
+		 Delete($5);
 	         add_symbols($$);
 	       }
                ;
@@ -3129,7 +3125,6 @@ c_declaration   : c_decl {
 		    while (n) {
 		      String *s = Getattr(n, "storage");
 		      if (s) {
-//	Printf(stderr, "storage (2) of interface is [%s]\n", s);
 			if (Strstr(s, "thread_local")) {
 			  Insert(s,0,"externc ");
 			} else if (!Equal(s, "typedef")) {
@@ -3404,19 +3399,19 @@ cpp_alternate_rettype : primitive_type { $$ = $1; }
 cpp_lambda_decl : storage_class AUTO idcolon EQUAL lambda_introducer lambda_template LPAREN parms RPAREN cpp_const lambda_body lambda_tail {
 		  $$ = new_node("lambda");
 		  Setattr($$,"name",$3);
-//		  Delete($1);
+		  Delete($1);
 		  add_symbols($$);
 	        }
                 | storage_class AUTO idcolon EQUAL lambda_introducer lambda_template LPAREN parms RPAREN cpp_const ARROW type lambda_body lambda_tail {
 		  $$ = new_node("lambda");
 		  Setattr($$,"name",$3);
-//		  Delete($1);
+		  Delete($1);
 		  add_symbols($$);
 		}
                 | storage_class AUTO idcolon EQUAL lambda_introducer lambda_template lambda_body lambda_tail {
 		  $$ = new_node("lambda");
 		  Setattr($$,"name",$3);
-//		  Delete($1);
+		  Delete($1);
 		  add_symbols($$);
 		}
                 ;
@@ -3543,7 +3538,6 @@ c_enum_decl :  storage_class c_enum_key ename c_enum_inherit LBRACE enumlist RBR
 		 if (scopedenum)
 		   SetFlag($$, "scopedenum");
 		 Setattr($$,"inherit",$4);
-//	Printf(stderr, "storage of enum is [%s]\n", $1);
 		 if ($3) {
 		   Setattr($$,"name",$3);
 		   ty = NewStringf("enum %s", $3);
@@ -3600,7 +3594,6 @@ c_enum_decl :  storage_class c_enum_key ename c_enum_inherit LBRACE enumlist RBR
 
                  /* Ensure that typedef enum ABC {foo} XYZ; uses XYZ for sym:name, like structs.
                   * Note that class_rename/yyrename are bit of a mess so used this simple approach to change the name. */
-//	Printf(stderr, "storage of enum (2) is [%s]\n", $1);
                  if ($8.id && $3 && Cmp($1,"typedef") == 0) {
 		   String *name = NewString($8.id);
                    Setattr($$, "parser:makename", name);
@@ -3672,8 +3665,8 @@ c_constructor_decl : storage_class type LPAREN parms RPAREN ctor_end {
 			Setattr($$,"final",$6.final);
 			err = 0;
 		      }
-//		    } else {
-//		      Delete($1);
+		    } else {
+		      Delete($1);
 		    }
 		    if (err) {
 		      Swig_error(cparse_file,cparse_line,"Syntax error in input(2).\n");
@@ -3865,7 +3858,6 @@ cpp_class_decl: storage_class cpptype idcolon class_virt_specifier_opt inherit L
 		     }
 		     p = nextSibling(p);
 		   }
-//	Printf(stderr, "storage of class %s/typedef %s is [%s]\n", cscope, scpname, $1);
 		   if ($10 && Cmp($1,"typedef") == 0)
 		     add_typedef_name($$, $10, $3, cscope, scpname);
 		   Delete(scpname);
@@ -4111,7 +4103,7 @@ cpp_opt_declarators :  SEMI { $$ = 0; }
    ------------------------------------------------------------ */
 
 cpp_forward_class_decl : storage_class cpptype idcolon SEMI {
-              if ($1 && (Strcmp($1,"friend") == 0)) {
+              if ($1 && (Cmp($1,"friend") == 0)) {
 		/* Ignore */
                 $$ = 0; 
 	      } else {
@@ -4121,7 +4113,7 @@ cpp_forward_class_decl : storage_class cpptype idcolon SEMI {
 		Setattr($$,"sym:weak", "1");
 		add_symbols($$);
 	      }
-//	      Delete($1);
+	      Delete($1);
              }
              ;
 
@@ -4717,7 +4709,7 @@ cpp_member_no_dox : c_declaration { $$ = $1; }
              | cpp_conversion_operator { $$ = $1; }
              | cpp_forward_class_decl { $$ = $1; }
 	     | cpp_class_decl { $$ = $1; }
-             | storage_class idcolon SEMI { $$ = 0; /*Delete($1);*/ }
+             | storage_class idcolon SEMI { $$ = 0; Delete($1); }
              | cpp_using_decl { $$ = $1; }
              | cpp_template_decl { $$ = $1; }
              | cpp_catch_decl { $$ = 0; }
@@ -4770,7 +4762,7 @@ cpp_constructor_decl : storage_class type LPAREN parms RPAREN ctor_end {
 		  Setattr($$,"value",$6.defarg);
 	      } else {
 		$$ = 0;
-		//Delete($1);
+		Delete($1);
               }
               }
               ;
@@ -5077,7 +5069,7 @@ cpp_vend       : cpp_const SEMI {
                ;
 
 
-anonymous_bitfield :  storage_class anon_bitfield_type COLON expr SEMI { /*Delete($1);*/ };
+anonymous_bitfield :  storage_class anon_bitfield_type COLON expr SEMI { Delete($1); };
 
 /* Equals type_right without the ENUM keyword and cpptype (templates etc.): */
 anon_bitfield_type : primitive_type { $$ = $1;
@@ -5134,7 +5126,6 @@ storage_class  : storage_class_list {
 		 } else {
 		   Chop(r);
 		   $$ = r;
-//		   Printf(stderr, "storage_class is [%s]\n", r);
 		 }
 	       }
                | empty { $$ = 0; }
