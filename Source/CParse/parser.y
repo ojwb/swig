@@ -507,7 +507,7 @@ static void add_symbols(Node *n) {
       String *makename = Getattr(n,"parser:makename");
       if (iscdecl) {	
 	String *storage = Getattr(n, "storage");
-	Printf(stderr, "storage of %s is [%s]\n", name, storage);
+//	Printf(stderr, "storage of %s is [%s]\n", name, storage);
 	if (Cmp(storage,"typedef") == 0) {
 	  Setattr(n,"kind","typedef");
 	} else {
@@ -1192,7 +1192,7 @@ Printf(stdout, "comparing current: [%s] found: [%s]\n", current_scopename, found
 static String *try_to_find_a_name_for_unnamed_structure(const char *storage, Node *decls) {
   String *name = 0;
   Node *n = decls;
-	Printf(stderr, "storage of unnamed structure is [%s]\n", storage);
+//  Printf(stderr, "storage of unnamed structure is [%s]\n", storage);
   if (storage && (strcmp(storage, "typedef") == 0)) {
     for (; n; n = nextSibling(n)) {
       if (!Len(Getattr(n, "decl"))) {
@@ -1240,7 +1240,7 @@ static Node *nested_forward_declaration(const char *storage, const String *kind,
   /* Add any variable instances. Also add in any further typedefs of the nested type.
      Note that anonymous typedefs (eg typedef struct {...} a, b;) are treated as class forward declarations */
   if (cpp_opt_declarators) {
-	Printf(stderr, "storage (2) of %s is [%s]\n", name, storage);
+//	Printf(stderr, "storage (2) of %s is [%s]\n", name, storage);
     int storage_typedef = (storage && (strcmp(storage, "typedef") == 0));
     int variable_of_anonymous_type = !sname && !storage_typedef;
     if (!variable_of_anonymous_type) {
@@ -3129,7 +3129,7 @@ c_declaration   : c_decl {
 		    while (n) {
 		      String *s = Getattr(n, "storage");
 		      if (s) {
-	Printf(stderr, "storage (2) of interface is [%s]\n", s);
+//	Printf(stderr, "storage (2) of interface is [%s]\n", s);
 			if (Strstr(s, "thread_local")) {
 			  Insert(s,0,"externc ");
 			} else if (!Equal(s, "typedef")) {
@@ -3543,7 +3543,7 @@ c_enum_decl :  storage_class c_enum_key ename c_enum_inherit LBRACE enumlist RBR
 		 if (scopedenum)
 		   SetFlag($$, "scopedenum");
 		 Setattr($$,"inherit",$4);
-	Printf(stderr, "storage of enum is [%s]\n", $1);
+//	Printf(stderr, "storage of enum is [%s]\n", $1);
 		 if ($3) {
 		   Setattr($$,"name",$3);
 		   ty = NewStringf("enum %s", $3);
@@ -3600,7 +3600,7 @@ c_enum_decl :  storage_class c_enum_key ename c_enum_inherit LBRACE enumlist RBR
 
                  /* Ensure that typedef enum ABC {foo} XYZ; uses XYZ for sym:name, like structs.
                   * Note that class_rename/yyrename are bit of a mess so used this simple approach to change the name. */
-	Printf(stderr, "storage of enum (2) is [%s]\n", $1);
+//	Printf(stderr, "storage of enum (2) is [%s]\n", $1);
                  if ($8.id && $3 && Cmp($1,"typedef") == 0) {
 		   String *name = NewString($8.id);
                    Setattr($$, "parser:makename", name);
@@ -3865,7 +3865,7 @@ cpp_class_decl: storage_class cpptype idcolon class_virt_specifier_opt inherit L
 		     }
 		     p = nextSibling(p);
 		   }
-	Printf(stderr, "storage of class %s/typedef %s is [%s]\n", cscope, scpname, $1);
+//	Printf(stderr, "storage of class %s/typedef %s is [%s]\n", cscope, scpname, $1);
 		   if ($10 && Cmp($1,"typedef") == 0)
 		     add_typedef_name($$, $10, $3, cscope, scpname);
 		   Delete(scpname);
@@ -5134,7 +5134,7 @@ storage_class  : storage_class_list {
 		 } else {
 		   Chop(r);
 		   $$ = r;
-		   Printf(stderr, "storage_class is [%s]\n", r);
+//		   Printf(stderr, "storage_class is [%s]\n", r);
 		 }
 	       }
                | empty { $$ = 0; }
