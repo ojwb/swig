@@ -355,7 +355,7 @@ JAVA_ARRAYS_TYPEMAPS(double, double, jdouble, Double, "[D")     /* double[ANY] *
   protected static $javaclassname[] cArrayWrap(long[] cArray, boolean cMemoryOwn) {
     $javaclassname[] arrayWrapper = new $javaclassname[cArray.length];
     for (int i=0; i<cArray.length; i++)
-      arrayWrapper[i] = new $javaclassname(cArray[i], cMemoryOwn);
+      arrayWrapper[i] = new $javaclassname(cArray[i], cMemoryOwn, SWIGDummy.dummy);
     return arrayWrapper;
   }
 %}

@@ -266,7 +266,7 @@
   private transient long swigCPtr;
   private transient boolean swigCMemOwnBase;
 
-  PTRCTOR_VISIBILITY $javaclassname(long cPtr, boolean cMemoryOwn) {
+  PTRCTOR_VISIBILITY $javaclassname(long cPtr, boolean cMemoryOwn, @SuppressWarnings("unused") SWIGDummy dummy) {
     swigCMemOwnBase = cMemoryOwn;
     swigCPtr = cPtr;
   }
@@ -281,8 +281,8 @@
   private transient long swigCPtr;
   private transient boolean swigCMemOwnDerived;
 
-  PTRCTOR_VISIBILITY $javaclassname(long cPtr, boolean cMemoryOwn) {
-    super($imclassname.$javaclazznameSWIGSmartPtrUpcast(cPtr), true);
+  PTRCTOR_VISIBILITY $javaclassname(long cPtr, boolean cMemoryOwn, SWIGDummy dummy) {
+    super($imclassname.$javaclazznameSWIGSmartPtrUpcast(cPtr), true, dummy);
     swigCMemOwnDerived = cMemoryOwn;
     swigCPtr = cPtr;
   }
@@ -416,7 +416,7 @@
   private transient long swigCPtr;
   private transient boolean swigCMemOwnBase;
 
-  PTRCTOR_VISIBILITY $javaclassname(long cPtr, boolean cMemoryOwn) {
+  PTRCTOR_VISIBILITY $javaclassname(long cPtr, boolean cMemoryOwn, @SuppressWarnings("unused") SWIGDummy dummy) {
     swigCMemOwnBase = cMemoryOwn;
     swigCPtr = cPtr;
   }
@@ -431,8 +431,8 @@
   private transient long swigCPtr;
   private transient boolean swigCMemOwnDerived;
 
-  PTRCTOR_VISIBILITY $javaclassname(long cPtr, boolean cMemoryOwn) {
-    super($imclassname.$javaclazznameSWIGSmartPtrUpcast(cPtr), true);
+  PTRCTOR_VISIBILITY $javaclassname(long cPtr, boolean cMemoryOwn, SWIGDummy dummy) {
+    super($imclassname.$javaclazznameSWIGSmartPtrUpcast(cPtr), true, dummy);
     swigCMemOwnDerived = cMemoryOwn;
     swigCPtr = cPtr;
   }

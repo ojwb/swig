@@ -677,7 +677,7 @@ Swig::LocalRefGuard $1_refguard(jenv, $input); }
 %typemap(directorin,descriptor="L$packagepath/$&javaclassname;") SWIGTYPE 
 %{ $input = 0;
    *(($&1_ltype*)&$input) = new $1_ltype(SWIG_STD_MOVE($1)); %}
-%typemap(javadirectorin) SWIGTYPE "new $&javaclassname($jniinput, true)"
+%typemap(javadirectorin) SWIGTYPE "new $&javaclassname($jniinput, true, SWIGDummy.dummy)"
 %typemap(javadirectorout) SWIGTYPE "$&javaclassname.getCPtr($javacall)"
 
 /* Generic pointers and references */
@@ -741,9 +741,9 @@ Swig::LocalRefGuard $1_refguard(jenv, $input); }
 %typemap(directorin,descriptor="L$packagepath/$javaclassname;") SWIGTYPE &&
 %{ *($&1_ltype)&$input = ($1_ltype) &$1; %}
 
-%typemap(javadirectorin) SWIGTYPE *, SWIGTYPE (CLASS::*) "($jniinput == 0) ? null : new $javaclassname($jniinput, false)"
-%typemap(javadirectorin) SWIGTYPE & "new $javaclassname($jniinput, false)"
-%typemap(javadirectorin) SWIGTYPE && "new $javaclassname($jniinput, false)"
+%typemap(javadirectorin) SWIGTYPE *, SWIGTYPE (CLASS::*) "($jniinput == 0) ? null : new $javaclassname($jniinput, false, SWIGDummy.dummy)"
+%typemap(javadirectorin) SWIGTYPE & "new $javaclassname($jniinput, false, SWIGDummy.dummy)"
+%typemap(javadirectorin) SWIGTYPE && "new $javaclassname($jniinput, false, SWIGDummy.dummy)"
 %typemap(javadirectorout) SWIGTYPE *, SWIGTYPE (CLASS::*), SWIGTYPE &, SWIGTYPE && "$javaclassname.getCPtr($javacall)"
 
 /* Default array handling */
@@ -1152,21 +1152,21 @@ Swig::LocalRefGuard $1_refguard(jenv, $input); }
     $jnicall;
   }
 %typemap(javaout) SWIGTYPE {
-    return new $&javaclassname($jnicall, true);
+    return new $&javaclassname($jnicall, true, SWIGDummy.dummy);
   }
 %typemap(javaout) SWIGTYPE & {
-    return new $javaclassname($jnicall, $owner);
+    return new $javaclassname($jnicall, $owner, SWIGDummy.dummy);
   }
 %typemap(javaout) SWIGTYPE && {
-    return new $javaclassname($jnicall, $owner);
+    return new $javaclassname($jnicall, $owner, SWIGDummy.dummy);
   }
 %typemap(javaout) SWIGTYPE *, SWIGTYPE [] {
     long cPtr = $jnicall;
-    return (cPtr == 0) ? null : new $javaclassname(cPtr, $owner);
+    return (cPtr == 0) ? null : new $javaclassname(cPtr, $owner, SWIGDummy.dummy);
   }
 %typemap(javaout) SWIGTYPE (CLASS::*) {
     String cMemberPtr = $jnicall;
-    return (cMemberPtr == null) ? null : new $javaclassname(cMemberPtr, $owner);
+    return (cMemberPtr == null) ? null : new $javaclassname(cMemberPtr, $owner, SWIGDummy.dummy);
   }
 
 /* Pointer reference typemaps */
@@ -1176,7 +1176,7 @@ Swig::LocalRefGuard $1_refguard(jenv, $input); }
 %typemap(javain) SWIGTYPE *const& "$*javaclassname.getCPtr($javainput)"
 %typemap(javaout) SWIGTYPE *const& {
     long cPtr = $jnicall;
-    return (cPtr == 0) ? null : new $*javaclassname(cPtr, $owner);
+    return (cPtr == 0) ? null : new $*javaclassname(cPtr, $owner, SWIGDummy.dummy);
   }
 %typemap(in) SWIGTYPE *const& ($*1_ltype temp = 0)
 %{ temp = *($1_ltype)&$input;
@@ -1189,7 +1189,7 @@ Swig::LocalRefGuard $1_refguard(jenv, $input); }
 %{ static $*1_ltype swig_temp;
    swig_temp = *($1_ltype)&$input;
    $result = &swig_temp; %}
-%typemap(javadirectorin) SWIGTYPE *const& "($jniinput == 0) ? null : new $*javaclassname($jniinput, false)"
+%typemap(javadirectorin) SWIGTYPE *const& "($jniinput == 0) ? null : new $*javaclassname($jniinput, false, SWIGDummy.dummy)"
 %typemap(javadirectorout) SWIGTYPE *const& "$*javaclassname.getCPtr($javacall)"
 
 /* Typemaps used for the generation of proxy and type wrapper class code */
@@ -1210,7 +1210,7 @@ Swig::LocalRefGuard $1_refguard(jenv, $input); }
   private transient long swigCPtr;
   protected transient boolean swigCMemOwn;
 
-  PTRCTOR_VISIBILITY $javaclassname(long cPtr, boolean cMemoryOwn) {
+  PTRCTOR_VISIBILITY $javaclassname(long cPtr, boolean cMemoryOwn, @SuppressWarnings("unused") SWIGDummy dummy) {
     swigCMemOwn = cMemoryOwn;
     swigCPtr = cPtr;
   }
@@ -1236,8 +1236,8 @@ Swig::LocalRefGuard $1_refguard(jenv, $input); }
 %typemap(javabody_derived) TYPE %{
   private transient long swigCPtr;
 
-  PTRCTOR_VISIBILITY $javaclassname(long cPtr, boolean cMemoryOwn) {
-    super($imclassname.$javaclazznameSWIGUpcast(cPtr), cMemoryOwn);
+  PTRCTOR_VISIBILITY $javaclassname(long cPtr, boolean cMemoryOwn, SWIGDummy dummy) {
+    super($imclassname.$javaclazznameSWIGUpcast(cPtr), cMemoryOwn, dummy);
     swigCPtr = cPtr;
   }
 
@@ -1333,7 +1333,7 @@ SWIG_JAVABODY_TYPEWRAPPER(protected, protected, protected, SWIGTYPE)
 
 %define SWIG_PROXY_CONSTRUCTOR(OWNERSHIP, WEAKREF, TYPENAME...)
 %typemap(javaconstruct,directorconnect="\n    $imclassname.$javaclazznamedirector_connect(this, swigCPtr, OWNERSHIP, WEAKREF);") TYPENAME {
-    this($imcall, OWNERSHIP);$directorconnect
+    this($imcall, OWNERSHIP, SWIGDummy.dummy);$directorconnect
   }
 %enddef
 

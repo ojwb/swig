@@ -17,24 +17,24 @@
 %typemap(javain) CTYPE *, CTYPE [] "($javainput == null) ? 0 : $javainput.$interfacename_GetInterfaceCPtr()"
 %typemap(javain) CTYPE *const& "($javainput == null) ? 0 : $javainput.$*interfacename_GetInterfaceCPtr()"
 %typemap(javaout) CTYPE {
-    return ($&javainterfacename)new $&javaclassname($jnicall, true);
+    return ($&javainterfacename)new $&javaclassname($jnicall, true, SWIGDummy.dummy);
   }
 %typemap(javaout) CTYPE & {
-    return ($javainterfacename)new $javaclassname($jnicall, $owner);
+    return ($javainterfacename)new $javaclassname($jnicall, $owner, SWIGDummy.dummy);
   }
 %typemap(javaout) CTYPE *, CTYPE [] {
     long cPtr = $jnicall;
-    return (cPtr == 0) ? null : ($javainterfacename)new $javaclassname(cPtr, $owner);
+    return (cPtr == 0) ? null : ($javainterfacename)new $javaclassname(cPtr, $owner, SWIGDummy.dummy);
   }
 %typemap(javaout) CTYPE *const& {
     long cPtr = $jnicall;
-    return (cPtr == 0) ? null : ($*javainterfacename)new $*javaclassname(cPtr, $owner);
+    return (cPtr == 0) ? null : ($*javainterfacename)new $*javaclassname(cPtr, $owner, SWIGDummy.dummy);
   }
 
-%typemap(javadirectorin) CTYPE "($&javainterfacename)new $&javaclassname($jniinput, true)"
-%typemap(javadirectorin) CTYPE & "($javainterfacename)new $javaclassname($jniinput, false)"
-%typemap(javadirectorin) CTYPE *, CTYPE [] "($jniinput == 0) ? null : ($javainterfacename)new $javaclassname($jniinput, false)"
-%typemap(javadirectorin) CTYPE *const& "($jniinput == 0) ? null : ($*javainterfacename)new $*javaclassname($jniinput, false)"
+%typemap(javadirectorin) CTYPE "($&javainterfacename)new $&javaclassname($jniinput, true, SWIGDummy.dummy)"
+%typemap(javadirectorin) CTYPE & "($javainterfacename)new $javaclassname($jniinput, false, SWIGDummy.dummy)"
+%typemap(javadirectorin) CTYPE *, CTYPE [] "($jniinput == 0) ? null : ($javainterfacename)new $javaclassname($jniinput, false, SWIGDummy.dummy)"
+%typemap(javadirectorin) CTYPE *const& "($jniinput == 0) ? null : ($*javainterfacename)new $*javaclassname($jniinput, false, SWIGDummy.dummy)"
 %typemap(javadirectorout) CTYPE "$javacall.$&interfacename_GetInterfaceCPtr()"
 %typemap(javadirectorout) CTYPE *, CTYPE [], CTYPE & "$javacall.$interfacename_GetInterfaceCPtr()"
 %typemap(javadirectorout) CTYPE *const& "$javacall.$*interfacename_GetInterfaceCPtr()"

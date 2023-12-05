@@ -28,7 +28,7 @@
 
 %typemap(javaout) std::auto_ptr< TYPE > {
     long cPtr = $jnicall;
-    return (cPtr == 0) ? null : new $typemap(jstype, TYPE)(cPtr, true);
+    return (cPtr == 0) ? null : new $typemap(jstype, TYPE)(cPtr, true, SWIGDummy.dummy);
   }
 
 %typemap(typecheck, precedence=SWIG_TYPECHECK_POINTER, equivalent="TYPE *") std::auto_ptr< TYPE > ""

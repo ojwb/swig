@@ -243,7 +243,7 @@
   private transient long swigCPtr;
   private transient boolean swigCMemOwn;
 
-  PTRCTOR_VISIBILITY $javaclassname(long cPtr, boolean cMemoryOwn) {
+  PTRCTOR_VISIBILITY $javaclassname(long cPtr, boolean cMemoryOwn, @SuppressWarnings("unused") SWIGDummy dummy) {
     swigCMemOwn = cMemoryOwn;
     swigCPtr = cPtr;
   }
@@ -262,8 +262,8 @@
   private transient long swigCPtr;
   private transient boolean swigCMemOwnDerived;
 
-  PTRCTOR_VISIBILITY $javaclassname(long cPtr, boolean cMemoryOwn) {
-    super($imclassname.$javaclazznameSWIGSmartPtrUpcast(cPtr), true);
+  PTRCTOR_VISIBILITY $javaclassname(long cPtr, boolean cMemoryOwn, SWIGDummy dummy) {
+    super($imclassname.$javaclazznameSWIGSmartPtrUpcast(cPtr), true, dummy);
     swigCMemOwnDerived = cMemoryOwn;
     swigCPtr = cPtr;
   }
