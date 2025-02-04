@@ -1,14 +1,16 @@
 /* File : example.i */
 %module(docstring="external runtime") example
+
 %{
+#include <iostream>
 #include "example.h"
 %}
 
-%typemap(in) PyObject * pyCallable
+%typemap(in) SWIG_Object pyCallable
 {
   if ($input)
   {
-    PyObject * pyMesh = PyObject_CallMethod($input, const_cast<char *>("mesh"), const_cast<char *>("()"));
+    SWIG_Object pyMesh = PyObject_CallMethod($input, const_cast<char *>("mesh"), const_cast<char *>("()"));
     if (!pyMesh)
       throw std::runtime_error("null pyMesh");
     void * ptr = 0;
@@ -27,6 +29,27 @@
 
 
 %include "example.h"
+
+%inline {
+
+class Function
+{
+public:
+	explicit Function(SWIG_Object pyCallable = 0);
+	int meshValue() { return meshValue_;}
+
+private:
+	SWIG_Object pyObj_;
+	int meshValue_;
+};
+
+Function::Function(SWIG_Object pyCallable)
+: pyObj_(pyCallable), meshValue_(0)
+{
+  // stuff happens in the typemap of PyObject * pyCallable
+}
+
+}
 
 %inline %{
 // The -builtin SWIG option results in SWIGPYTHON_BUILTIN being defined
