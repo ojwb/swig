@@ -394,7 +394,7 @@ jobs:
       GCC: ${{ matrix.GCC }}
       CSTD: ${{ matrix.CSTD }}
       CPPSTD: ${{ matrix.CPPSTD }}
-      CPPFLAGS: ${{ matrix.CPPFLAGS }}
+      CPPFLAGS: ${{ matrix.CPPFLAGS }} -D_GLIBCXX_DEBUG
       PY_ABI_VER: ${{ matrix.PY_ABI_VER }}
 
     steps:
